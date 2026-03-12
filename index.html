@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ISTQB FL 1일차 예상문제</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; min-height: 100vh; }
+body {
+  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+  background: #EEF2F8;
+  padding: 20px 14px 60px;
+  color: #1a1a2e;
+}
+.header {
+  background: #1F497D; border-radius: 14px;
+  padding: 20px 22px; margin-bottom: 14px;
+}
+.header h1 { color: #fff; font-size: 18px; font-weight: 800; }
+.header p  { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 3px; }
+.scorebar { display: flex; gap: 8px; margin-bottom: 16px; }
+.pill {
+  flex: 1; background: #fff; border-radius: 12px;
+  padding: 12px 10px; border: 1.5px solid #DDE3EC; text-align: center;
+}
+.pill .val { font-size: 22px; font-weight: 900; color: #1F497D; }
+.pill .lbl { font-size: 10px; color: #777; margin-top: 2px; }
+.card {
+  background: #fff; border-radius: 14px;
+  border: 1.5px solid #DDE3EC; margin-bottom: 14px; overflow: hidden;
+}
+.card-head {
+  padding: 14px 16px 12px; border-bottom: 1px solid #EEF2F8;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.q-num {
+  width: 26px; height: 26px; border-radius: 7px;
+  background: #1F497D; color: #fff;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.q-tag {
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 20px; display: inline-block; margin-bottom: 5px;
+}
+.tag-obj   { background: #D6E4F0; color: #1F497D; }
+.tag-short { background: #FCE4D6; color: #C55A11; }
+.q-text { font-size: 14px; font-weight: 700; line-height: 1.55; color: #111; }
+.options { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+.opt {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 13px; border-radius: 10px;
+  border: 1.5px solid #DDE3EC;
+  background: #F4F6F9; color: #222;
+  font-size: 13px; line-height: 1.45;
+  cursor: pointer; -webkit-appearance: none;
+}
+.opt.correct { border-color: #1A7A4A; background: #D4EDDA; color: #1A7A4A; font-weight: 700; }
+.opt.wrong   { border-color: #C0392B; background: #FDECEA; color: #C0392B; font-weight: 700; }
+.opt.disabled { pointer-events: none; }
+.opt-ltr {
+  width: 26px; height: 26px; min-width: 26px; border-radius: 7px;
+  background: #fff; border: 1.5px solid #DDE3EC;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #888; margin-top: 1px;
+}
+.opt.correct .opt-ltr { background: #1A7A4A; border-color: #1A7A4A; color: #fff; }
+.opt.wrong   .opt-ltr { background: #C0392B; border-color: #C0392B; color: #fff; }
+.short-area { padding: 12px 14px 14px; }
+.short-input {
+  width: 100%; padding: 11px 13px;
+  border: 1.5px solid #DDE3EC; border-radius: 10px;
+  font-family: inherit; font-size: 14px;
+  background: #F4F6F9; color: #222;
+  outline: none; resize: none; -webkit-appearance: none;
+  display: block;
+}
+.short-input.c { border-color: #1A7A4A; background: #D4EDDA; }
+.short-input.w { border-color: #C0392B; background: #FDECEA; }
+.submit-btn {
+  margin-top: 10px; padding: 11px 22px; border-radius: 9px;
+  background: #1F497D; color: #fff;
+  font-family: inherit; font-size: 13px; font-weight: 700;
+  border: none; cursor: pointer; -webkit-appearance: none; display: block;
+}
+.submit-btn:disabled { background: #aaa; }
+.feedback {
+  margin: 0 14px 14px; padding: 12px 14px;
+  border-radius: 10px; font-size: 13px; line-height: 1.6; display: none;
+}
+.feedback.sc { display: block; background: #D4EDDA; color: #1A7A4A; }
+.feedback.sw { display: block; background: #FDECEA; color: #C0392B; }
+.feedback strong { display: block; margin-bottom: 3px; }
+.result {
+  background: #1F497D; border-radius: 14px;
+  padding: 28px 20px; text-align: center; margin-top: 6px; display: none;
+}
+.result h2   { color: #fff; font-size: 18px; font-weight: 800; }
+.result .big { font-size: 54px; font-weight: 900; color: #5DADE2; margin: 10px 0 4px; line-height: 1; }
+.result .sub { color: rgba(255,255,255,0.65); font-size: 13px; }
+.result .msg { color: #fff; font-size: 14px; font-weight: 700; margin: 12px 0; line-height: 1.5; }
+.retry-btn {
+  margin-top: 14px; padding: 12px 32px; border-radius: 10px;
+  background: #5DADE2; color: #fff; font-family: inherit;
+  font-size: 14px; font-weight: 700; border: none; cursor: pointer; -webkit-appearance: none;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>ISTQB FL &mdash; 1일차 예상문제</h1>
+  <p>소프트웨어 테스팅의 기초 &middot; 총 10문제</p>
+</div>
+
+<div class="scorebar">
+  <div class="pill"><div class="val" id="sc">0</div><div class="lbl">맞은 문제</div></div>
+  <div class="pill"><div class="val" id="sw">0</div><div class="lbl">틀린 문제</div></div>
+  <div class="pill"><div class="val" id="sl">10</div><div class="lbl">남은 문제</div></div>
+</div>
+
+<div id="quizList"></div>
+
+<div class="result" id="result">
+  <h2>풀이 완료!</h2>
+  <div class="big" id="rScore"></div>
+  <div class="sub" id="rPct"></div>
+  <div class="msg" id="rMsg"></div>
+  <button class="retry-btn" onclick="retry()">다시 풀기</button>
+</div>
+
+<script>
+var Q = [
+  { type:'obj', q:'다음 중 소프트웨어 테스팅에 대한 설명으로 가장 올바른 것은?',
+    opts:['테스팅은 소프트웨어에 결함이 없음을 증명하는 활동이다.',
+          '테스팅은 소프트웨어 실행을 통해서만 수행될 수 있다.',
+          '테스팅은 결함의 존재를 보여주는 활동이며, 결함이 없음을 증명하지는 않는다.',
+          '테스팅은 개발자가 코드를 완성한 후에만 시작해야 한다.'],
+    ans:2, ex:'원리 1: 테스팅은 결함의 존재를 보여줄 뿐, 결함이 없음을 증명하지 않습니다. 정적 활동(리뷰)도 테스팅에 포함되므로 실행만이 테스팅이 아닙니다.' },
+
+  { type:'obj', q:'개발자가 코드에 잘못된 조건식을 작성해 로그인이 불가능해졌다. "잘못된 조건식을 코드에 작성한 행위"에 해당하는 ISTQB 용어는?',
+    opts:['결함 (Defect)','장애 (Failure)','오류 (Error)','리스크 (Risk)'],
+    ans:2, ex:'오류(Error/Mistake)는 사람이 만들어내는 실수 자체입니다. 오류 -> 결함(코드) -> 장애(실행 현상) 순서로 이어집니다.' },
+
+  { type:'obj', q:'동일한 테스트 케이스를 반복 실행하면 더 이상 새로운 결함을 발견하지 못하게 된다는 테스팅 원리는?',
+    opts:['결함 집중 (Defect Clustering)','살충제 역설 (Pesticide Paradox)','조기 테스팅 (Early Testing)','완벽한 테스팅 불가 (Exhaustive Testing is Impossible)'],
+    ans:1, ex:'살충제 역설(원리 5): 같은 테스트를 반복하면 새 결함을 발견하지 못합니다. 주기적으로 테스트 케이스를 갱신해야 합니다.' },
+
+  { type:'obj', q:'소프트웨어 결함의 80%가 전체 모듈의 20%에 집중된다는 테스팅 원리와 관련 있는 법칙은?',
+    opts:['오캄의 면도날','파레토 법칙 (Pareto Principle)','머피의 법칙','브룩스의 법칙'],
+    ans:1, ex:'결함 집중(원리 4): 결함은 소수의 모듈에 집중되는 경향이 있으며, 이는 파레토 법칙(80:20 법칙)으로 설명됩니다.' },
+
+  { type:'obj', q:'테스트 레벨의 순서가 올바른 것은?',
+    opts:['컴포넌트 -> 시스템 -> 통합 -> 인수','인수 -> 시스템 -> 통합 -> 컴포넌트','컴포넌트 -> 통합 -> 시스템 -> 인수','통합 -> 컴포넌트 -> 시스템 -> 인수'],
+    ans:2, ex:'테스트 레벨은 작은 단위부터: 컴포넌트 -> 통합 -> 시스템 -> 인수 테스팅 순서입니다.' },
+
+  { type:'obj', q:'고객이나 최종 사용자가 직접 수행하며, 소프트웨어 출시 승인 여부를 결정하는 테스트 레벨은?',
+    opts:['컴포넌트 테스팅','통합 테스팅','시스템 테스팅','인수 테스팅'],
+    ans:3, ex:'인수 테스팅(Acceptance Testing): 고객/최종 사용자가 비즈니스 요구사항 기준으로 수행하며, 소프트웨어 출시 여부를 최종 승인하는 단계입니다.' },
+
+  { type:'obj', q:'결함이 전혀 없는 소프트웨어라도 사용자 요구사항을 충족하지 못하면 품질이 좋다고 할 수 없다는 원리는?',
+    opts:['살충제 역설 (Pesticide Paradox)','오류 부재의 오류 (Absence-of-Errors Fallacy)','결함 집중 (Defect Clustering)','테스팅은 상황에 의존한다'],
+    ans:1, ex:'오류 부재의 오류(원리 7): 결함을 모두 제거해도 요구사항을 충족하지 못하면 품질 좋은 소프트웨어라 할 수 없습니다.' },
+
+  { type:'short', q:'개발자가 코드 작성 중 저지른 "실수 행위" 자체를 가리키는 ISTQB 용어를 쓰시오.',
+    ans:['오류','error','mistake'], ex:'오류(Error/Mistake): 사람이 만들어내는 실수 자체입니다. 오류 -> 결함 -> 장애 순서를 꼭 기억하세요.' },
+
+  { type:'short', q:'"입력값과 실행 경로 조합이 무한하므로 모든 경우를 테스트하는 것은 불가능하다"는 테스팅 원리를 쓰시오.',
+    ans:['완벽한 테스팅은 불가능','완벽한 테스팅 불가','exhaustive testing','완전한 테스팅 불가'], ex:'원리 2: 완벽한 테스팅(Exhaustive Testing)은 불가능합니다. 리스크 기반 접근으로 우선순위를 설정해야 합니다.' },
+
+  { type:'short', q:'테스트 프로세스에서 "무엇을 테스트할지" 결정하고 테스트 컨디션을 식별하는 단계 이름을 쓰시오.',
+    ans:['테스트 분석','test analysis','분석'], ex:'테스트 분석(Test Analysis): 무엇을 테스트할지 결정하는 단계. 다음 단계인 테스트 설계에서 어떻게 테스트할지를 결정합니다.' }
+];
+
+var TOTAL = Q.length, answered = 0, correct = 0;
+var LTRS = ['A','B','C','D'];
+
+function build() {
+  answered = 0; correct = 0;
+  updateBar();
+  var list = document.getElementById('quizList');
+  list.innerHTML = '';
+  document.getElementById('result').style.display = 'none';
+  for (var i = 0; i < Q.length; i++) list.appendChild(makeCard(i));
+}
+
+function makeCard(i) {
+  var q = Q[i];
+  var card = document.createElement('div');
+  card.className = 'card';
+
+  var head = document.createElement('div');
+  head.className = 'card-head';
+  var num = document.createElement('div');
+  num.className = 'q-num';
+  num.textContent = i + 1;
+  var info = document.createElement('div');
+  info.style.flex = '1';
+  var tag = document.createElement('span');
+  tag.className = 'q-tag ' + (q.type === 'obj' ? 'tag-obj' : 'tag-short');
+  tag.textContent = q.type === 'obj' ? '4지선다' : '단답형';
+  var txt = document.createElement('div');
+  txt.className = 'q-text';
+  txt.textContent = q.q;
+  info.appendChild(tag); info.appendChild(txt);
+  head.appendChild(num); head.appendChild(info);
+  card.appendChild(head);
+
+  if (q.type === 'obj') {
+    var opts = document.createElement('div');
+    opts.className = 'options';
+    for (var j = 0; j < q.opts.length; j++) opts.appendChild(makeOpt(i, j, opts));
+    card.appendChild(opts);
+  } else {
+    var area = document.createElement('div');
+    area.className = 'short-area';
+    var inp = document.createElement('textarea');
+    inp.className = 'short-input';
+    inp.rows = 2;
+    inp.placeholder = '답을 입력하세요...';
+    var sbtn = document.createElement('button');
+    sbtn.className = 'submit-btn';
+    sbtn.textContent = '제출';
+    (function(qi, si, sb) {
+      sbtn.onclick = function() { submitShort(qi, si, sb); };
+    })(i, inp, sbtn);
+    area.appendChild(inp); area.appendChild(sbtn);
+    card.appendChild(area);
+  }
+
+  var fb = document.createElement('div');
+  fb.className = 'feedback';
+  fb.id = 'fb' + i;
+  card.appendChild(fb);
+  return card;
+}
+
+function makeOpt(qi, oi, optsEl) {
+  var btn = document.createElement('div');
+  btn.className = 'opt';
+  var ltr = document.createElement('div');
+  ltr.className = 'opt-ltr';
+  ltr.textContent = LTRS[oi];
+  var sp = document.createElement('span');
+  sp.textContent = Q[qi].opts[oi];
+  btn.appendChild(ltr); btn.appendChild(sp);
+  btn.addEventListener('click', function() { chooseOpt(qi, oi, optsEl); });
+  return btn;
+}
+
+function chooseOpt(qi, oi, optsEl) {
+  var btns = optsEl.querySelectorAll('.opt');
+  if (btns[0].classList.contains('disabled')) return;
+  for (var k = 0; k < btns.length; k++) btns[k].classList.add('disabled');
+  var isC = oi === Q[qi].ans;
+  btns[oi].classList.add(isC ? 'correct' : 'wrong');
+  if (!isC) btns[Q[qi].ans].classList.add('correct');
+  showFb(qi, isC, Q[qi].ex, null);
+  record(isC);
+}
+
+function submitShort(qi, inp, btn) {
+  var val = inp.value.trim().toLowerCase();
+  if (!val) return;
+  var isC = false;
+  for (var k = 0; k < Q[qi].ans.length; k++) {
+    if (val.indexOf(Q[qi].ans[k].toLowerCase()) !== -1) { isC = true; break; }
+  }
+  inp.disabled = true; btn.disabled = true;
+  inp.classList.add(isC ? 'c' : 'w');
+  showFb(qi, isC, Q[qi].ex, isC ? null : '정답: ' + Q[qi].ans[0]);
+  record(isC);
+}
+
+function showFb(qi, isC, ex, extra) {
+  var fb = document.getElementById('fb' + qi);
+  fb.className = 'feedback ' + (isC ? 'sc' : 'sw');
+  fb.innerHTML = '<strong>' + (isC ? '정답입니다!' : '오답입니다.') + '</strong>' +
+    (extra ? extra + '<br>' : '') + ex;
+}
+
+function record(isC) {
+  answered++; if (isC) correct++;
+  updateBar();
+  if (answered === TOTAL) setTimeout(showResult, 500);
+}
+
+function updateBar() {
+  document.getElementById('sc').textContent = correct;
+  document.getElementById('sw').textContent = answered - correct;
+  document.getElementById('sl').textContent = TOTAL - answered;
+}
+
+function showResult() {
+  var pct = Math.round(correct / TOTAL * 100);
+  var el = document.getElementById('result');
+  el.style.display = 'block';
+  document.getElementById('rScore').textContent = correct + '/' + TOTAL;
+  document.getElementById('rPct').textContent = '정답률 ' + pct + '%';
+  document.getElementById('rMsg').textContent =
+    pct >= 90 ? '완벽해요! 이 챕터 완전히 마스터했어요.' :
+    pct >= 70 ? '잘 하고 있어요! 틀린 문제 위주로 복습해 보세요.' :
+    pct >= 50 ? '조금 더 복습이 필요해요. 1일차 자료를 다시 확인해 보세요.' :
+                '다시 도전해보세요! 기초 개념부터 차근차근 복습해요.';
+  el.scrollIntoView({ behavior: 'smooth' });
+}
+
+function retry() { build(); window.scrollTo(0, 0); }
+
+build();
+</script>
+</body>
+</html>
