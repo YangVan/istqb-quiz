@@ -34,6 +34,8 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  word-break: keep-all;
+  word-wrap: break-word;
 }
 
 /* ── SCREENS ── */
@@ -197,7 +199,14 @@ body {
   background: var(--bg3); border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; font-size: 16px; color: var(--text);
-  flex-shrink: 0;
+  flex-shrink: 0; text-decoration: none;
+}
+.home-btn {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 15px; color: var(--text);
+  flex-shrink: 0; margin-left: auto;
 }
 .study-topbar-title { font-size: 15px; font-weight: 700; color: var(--text); }
 
@@ -231,14 +240,15 @@ body {
   margin-bottom: 8px;
 }
 .content-bullet {
-  display: flex; gap: 10px;
-  font-size: 13.5px; color: var(--text2); line-height: 1.6;
-  margin-bottom: 6px; padding-left: 4px;
+  font-size: 14px; color: var(--text2); line-height: 1.75;
+  margin-bottom: 8px; padding-left: 16px;
+  position: relative; word-break: keep-all; word-wrap: break-word;
 }
 .content-bullet::before {
   content: ''; width: 5px; height: 5px; border-radius: 50%;
-  background: var(--accent); flex-shrink: 0; margin-top: 8px;
+  background: var(--accent); position: absolute; left: 2px; top: 10px;
 }
+.content-bullet b { color: var(--text); font-weight: 700; }
 .content-bullet b { color: var(--text); }
 
 .callout {
@@ -444,6 +454,7 @@ body {
   <div class="study-topbar">
     <div class="back-btn" onclick="goMain()">&#8592;</div>
     <div class="study-topbar-title" id="studyTopTitle"></div>
+    <div class="home-btn" onclick="goMain()" title="홈으로">&#8962;</div>
   </div>
   <div class="study-hero">
     <div class="study-day-label" id="studyDayLabel"></div>
@@ -462,6 +473,7 @@ body {
     <div class="back-btn" onclick="goMain()">&#8592;</div>
     <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizProgFill" style="width:0%"></div></div>
     <div class="quiz-count" id="quizCount">0/0</div>
+    <div class="home-btn" onclick="goMain()" title="홈으로">&#8962;</div>
   </div>
   <div class="quiz-content" id="quizContent"></div>
   <div class="quiz-result" id="quizResult">
