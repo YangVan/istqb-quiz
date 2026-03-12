@@ -4,313 +4,932 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>ISTQB FL 1일차 예상문제</title>
+<title>ISTQB FL Study</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { width: 100%; min-height: 100vh; }
+:root {
+  --bg:       #0D1117;
+  --bg2:      #161B22;
+  --bg3:      #21262D;
+  --border:   #30363D;
+  --navy:     #1F497D;
+  --blue:     #2E75B6;
+  --lblue:    #1A3A5C;
+  --accent:   #58A6FF;
+  --green:    #3FB950;
+  --lgreen:   #0D2818;
+  --red:      #F85149;
+  --lred:     #2D1214;
+  --orange:   #F0883E;
+  --lorange:  #2D1F0D;
+  --yellow:   #E3B341;
+  --text:     #E6EDF3;
+  --text2:    #8B949E;
+  --text3:    #6E7681;
+  --white:    #FFFFFF;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
 body {
   font-family: -apple-system, 'Helvetica Neue', sans-serif;
-  background: #EEF2F8;
-  padding: 20px 14px 60px;
-  color: #1a1a2e;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
 }
-.header {
-  background: #1F497D; border-radius: 14px;
-  padding: 20px 22px; margin-bottom: 14px;
+
+/* ── SCREENS ── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: block; }
+
+/* ══════════════════════════════
+   SETUP SCREEN
+══════════════════════════════ */
+#setupScreen {
+  display: none;
+  align-items: center; justify-content: center;
+  min-height: 100vh; padding: 24px;
+  background: var(--bg);
 }
-.header h1 { color: #fff; font-size: 18px; font-weight: 800; }
-.header p  { color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 3px; }
-.scorebar { display: flex; gap: 8px; margin-bottom: 16px; }
-.pill {
-  flex: 1; background: #fff; border-radius: 12px;
-  padding: 12px 10px; border: 1.5px solid #DDE3EC; text-align: center;
+#setupScreen.active { display: flex; }
+
+.setup-card {
+  width: 100%; max-width: 420px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 40px 36px;
+  text-align: center;
 }
-.pill .val { font-size: 22px; font-weight: 900; color: #1F497D; }
-.pill .lbl { font-size: 10px; color: #777; margin-top: 2px; }
-.card {
-  background: #fff; border-radius: 14px;
-  border: 1.5px solid #DDE3EC; margin-bottom: 14px; overflow: hidden;
+.setup-logo {
+  width: 64px; height: 64px; border-radius: 16px;
+  background: var(--navy); margin: 0 auto 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
 }
-.card-head {
-  padding: 14px 16px 12px; border-bottom: 1px solid #EEF2F8;
-  display: flex; gap: 10px; align-items: flex-start;
+.setup-card h1 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.setup-card p  { font-size: 14px; color: var(--text2); margin-bottom: 28px; line-height: 1.6; }
+.setup-label { font-size: 12px; font-weight: 700; color: var(--text2); text-align: left; margin-bottom: 8px; letter-spacing: 0.5px; }
+.date-input {
+  width: 100%; padding: 14px 16px;
+  background: var(--bg3); border: 1.5px solid var(--border);
+  border-radius: 12px; color: var(--text);
+  font-family: inherit; font-size: 15px;
+  outline: none; margin-bottom: 20px;
+  -webkit-appearance: none;
 }
-.q-num {
-  width: 26px; height: 26px; border-radius: 7px;
-  background: #1F497D; color: #fff;
+.date-input:focus { border-color: var(--accent); }
+.start-btn {
+  width: 100%; padding: 14px;
+  background: var(--accent); color: #0D1117;
+  font-family: inherit; font-size: 15px; font-weight: 800;
+  border: none; border-radius: 12px; cursor: pointer;
+  transition: opacity 0.15s;
+}
+.start-btn:hover { opacity: 0.88; }
+
+/* ══════════════════════════════
+   MAIN SCREEN
+══════════════════════════════ */
+#mainScreen { padding: 0 0 80px; }
+
+/* Top bar */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,17,23,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.topbar-logo { font-size: 15px; font-weight: 800; color: var(--accent); }
+.topbar-dday {
+  font-size: 13px; font-weight: 700;
+  background: var(--lblue); color: var(--accent);
+  padding: 5px 12px; border-radius: 20px;
+  border: 1px solid var(--accent);
+}
+
+/* Hero */
+.hero {
+  padding: 28px 20px 20px;
+  background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+}
+.hero-title { font-size: 13px; font-weight: 700; color: var(--text2); letter-spacing: 1px; margin-bottom: 4px; }
+.hero-sub   { font-size: 22px; font-weight: 900; color: var(--text); margin-bottom: 16px; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 6px; }
+.progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+.progress-bar { height: 6px; background: var(--bg3); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.4s ease; }
+
+/* Stats row */
+.stats-row { display: flex; gap: 10px; padding: 16px 20px; }
+.stat-card {
+  flex: 1; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px 12px; text-align: center;
+}
+.stat-val { font-size: 22px; font-weight: 900; color: var(--accent); }
+.stat-lbl { font-size: 10px; color: var(--text2); margin-top: 3px; }
+
+/* Section title */
+.section-title {
+  font-size: 12px; font-weight: 700; color: var(--text2);
+  letter-spacing: 1px; padding: 20px 20px 10px;
+}
+
+/* Day cards */
+.day-list { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+
+.day-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+  transition: border-color 0.15s;
+}
+.day-card.unlocked { border-color: var(--border); }
+.day-card.completed { border-color: var(--green); }
+.day-card.locked { opacity: 0.45; }
+
+.day-card-head {
+  padding: 16px 18px;
+  display: flex; align-items: center; gap: 14px;
+  cursor: pointer;
+}
+.day-card.locked .day-card-head { cursor: default; }
+
+.day-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.day-icon.done   { background: var(--lgreen); }
+.day-icon.active { background: var(--lblue); }
+.day-icon.lock   { background: var(--bg3); }
+
+.day-info { flex: 1; }
+.day-label { font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 0.5px; margin-bottom: 3px; }
+.day-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.day-chapter { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+.day-badge {
+  font-size: 11px; font-weight: 700; padding: 4px 10px;
+  border-radius: 20px; flex-shrink: 0;
+}
+.badge-done   { background: var(--lgreen); color: var(--green); }
+.badge-active { background: var(--lblue);  color: var(--accent); }
+.badge-lock   { background: var(--bg3);    color: var(--text3); }
+
+/* ══════════════════════════════
+   STUDY SCREEN
+══════════════════════════════ */
+#studyScreen { padding-bottom: 100px; }
+
+.study-topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,17,23,0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 14px;
+}
+.back-btn {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 16px; color: var(--text);
+  flex-shrink: 0;
+}
+.study-topbar-title { font-size: 15px; font-weight: 700; color: var(--text); }
+
+.study-hero {
+  padding: 24px 20px 20px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+}
+.study-day-label { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 1px; margin-bottom: 4px; }
+.study-title { font-size: 20px; font-weight: 900; color: var(--text); margin-bottom: 4px; }
+.study-chapter { font-size: 13px; color: var(--text2); }
+
+.study-content { padding: 20px; }
+
+/* Content blocks */
+.content-section { margin-bottom: 28px; }
+.content-h1 {
+  font-size: 16px; font-weight: 800; color: var(--text);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+.content-h1 span { color: var(--accent); margin-right: 8px; }
+
+.content-h2 {
+  font-size: 14px; font-weight: 700; color: var(--accent);
+  margin: 16px 0 8px;
+}
+.content-p {
+  font-size: 14px; color: var(--text2); line-height: 1.7;
+  margin-bottom: 8px;
+}
+.content-bullet {
+  display: flex; gap: 10px;
+  font-size: 13.5px; color: var(--text2); line-height: 1.6;
+  margin-bottom: 6px; padding-left: 4px;
+}
+.content-bullet::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0; margin-top: 8px;
+}
+.content-bullet b { color: var(--text); }
+
+.callout {
+  background: var(--lblue); border: 1px solid var(--accent);
+  border-radius: 12px; padding: 14px 16px; margin: 12px 0;
+  font-size: 13px; color: var(--accent); line-height: 1.6;
+}
+.callout b { display: block; margin-bottom: 4px; color: var(--accent); }
+
+/* Table */
+.content-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+.content-table th {
+  background: var(--navy); color: var(--white);
+  padding: 10px 12px; text-align: left; font-weight: 700;
+}
+.content-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text2); }
+.content-table tr:nth-child(even) td { background: var(--bg3); }
+.content-table td b { color: var(--text); }
+
+/* Principle cards */
+.principle {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+}
+.principle-num { font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 4px; letter-spacing: 0.5px; }
+.principle-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+.principle-desc { font-size: 13px; color: var(--text2); line-height: 1.55; }
+.principle-desc b { color: var(--orange); }
+
+/* Complete button */
+.complete-wrap {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 16px 20px;
+  background: rgba(13,17,23,0.96);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+}
+.complete-btn {
+  width: 100%; padding: 16px;
+  background: var(--accent); color: #0D1117;
+  font-family: inherit; font-size: 15px; font-weight: 800;
+  border: none; border-radius: 14px; cursor: pointer;
+}
+.complete-btn:disabled { background: var(--green); color: var(--white); cursor: default; }
+
+/* ══════════════════════════════
+   QUIZ SCREEN
+══════════════════════════════ */
+#quizScreen { padding-bottom: 40px; }
+
+.quiz-topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,17,23,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 14px;
+}
+.quiz-progress-bar {
+  flex: 1; height: 5px; background: var(--bg3);
+  border-radius: 99px; overflow: hidden;
+}
+.quiz-progress-fill {
+  height: 100%; background: var(--accent);
+  border-radius: 99px; transition: width 0.3s ease;
+}
+.quiz-count { font-size: 12px; font-weight: 700; color: var(--text2); flex-shrink: 0; }
+
+.quiz-content { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+.quiz-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+}
+.quiz-card-head { padding: 16px 18px 13px; border-bottom: 1px solid var(--bg3); display: flex; gap: 12px; }
+.quiz-num {
+  width: 27px; height: 27px; border-radius: 8px;
+  background: var(--navy); color: var(--white);
   font-size: 12px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.q-tag {
-  font-size: 10px; font-weight: 700; padding: 2px 7px;
-  border-radius: 20px; display: inline-block; margin-bottom: 5px;
-}
-.tag-obj   { background: #D6E4F0; color: #1F497D; }
-.tag-short { background: #FCE4D6; color: #C55A11; }
-.q-text { font-size: 14px; font-weight: 700; line-height: 1.55; color: #111; }
-.options { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px; }
-.opt {
+.quiz-q { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.55; }
+
+.quiz-opts { padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 8px; }
+.quiz-opt {
   display: flex; align-items: flex-start; gap: 10px;
-  padding: 12px 13px; border-radius: 10px;
-  border: 1.5px solid #DDE3EC;
-  background: #F4F6F9; color: #222;
-  font-size: 13px; line-height: 1.45;
-  cursor: pointer; -webkit-appearance: none;
+  padding: 12px 14px; border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--bg3); color: var(--text2);
+  font-size: 13px; line-height: 1.45; cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
 }
-.opt.correct { border-color: #1A7A4A; background: #D4EDDA; color: #1A7A4A; font-weight: 700; }
-.opt.wrong   { border-color: #C0392B; background: #FDECEA; color: #C0392B; font-weight: 700; }
-.opt.disabled { pointer-events: none; }
+.quiz-opt:hover { border-color: var(--accent); background: var(--lblue); color: var(--text); }
+.quiz-opt.disabled { pointer-events: none; }
+.quiz-opt.correct { border-color: var(--green); background: var(--lgreen); color: var(--green); font-weight: 700; }
+.quiz-opt.wrong   { border-color: var(--red);   background: var(--lred);   color: var(--red);   font-weight: 700; }
 .opt-ltr {
-  width: 26px; height: 26px; min-width: 26px; border-radius: 7px;
-  background: #fff; border: 1.5px solid #DDE3EC;
+  width: 25px; height: 25px; min-width: 25px; border-radius: 7px;
+  background: var(--bg2); border: 1.5px solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; color: #888; margin-top: 1px;
+  font-size: 11px; font-weight: 700; color: var(--text3); margin-top: 1px;
 }
-.opt.correct .opt-ltr { background: #1A7A4A; border-color: #1A7A4A; color: #fff; }
-.opt.wrong   .opt-ltr { background: #C0392B; border-color: #C0392B; color: #fff; }
-.short-area { padding: 12px 14px 14px; }
-.short-input {
-  width: 100%; padding: 11px 13px;
-  border: 1.5px solid #DDE3EC; border-radius: 10px;
-  font-family: inherit; font-size: 14px;
-  background: #F4F6F9; color: #222;
-  outline: none; resize: none; -webkit-appearance: none;
-  display: block;
-}
-.short-input.c { border-color: #1A7A4A; background: #D4EDDA; }
-.short-input.w { border-color: #C0392B; background: #FDECEA; }
-.submit-btn {
-  margin-top: 10px; padding: 11px 22px; border-radius: 9px;
-  background: #1F497D; color: #fff;
-  font-family: inherit; font-size: 13px; font-weight: 700;
-  border: none; cursor: pointer; -webkit-appearance: none; display: block;
-}
-.submit-btn:disabled { background: #aaa; }
-.feedback {
-  margin: 0 14px 14px; padding: 12px 14px;
+.quiz-opt.correct .opt-ltr { background: var(--green); border-color: var(--green); color: #fff; }
+.quiz-opt.wrong   .opt-ltr { background: var(--red);   border-color: var(--red);   color: #fff; }
+
+.quiz-fb {
+  margin: 0 16px 14px; padding: 12px 14px;
   border-radius: 10px; font-size: 13px; line-height: 1.6; display: none;
 }
-.feedback.sc { display: block; background: #D4EDDA; color: #1A7A4A; }
-.feedback.sw { display: block; background: #FDECEA; color: #C0392B; }
-.feedback strong { display: block; margin-bottom: 3px; }
-.result {
-  background: #1F497D; border-radius: 14px;
-  padding: 28px 20px; text-align: center; margin-top: 6px; display: none;
+.quiz-fb.sc { display: block; background: var(--lgreen); color: var(--green); border: 1px solid var(--green); }
+.quiz-fb.sw { display: block; background: var(--lred);   color: var(--red);   border: 1px solid var(--red); }
+.quiz-fb strong { display: block; margin-bottom: 3px; }
+
+/* Result */
+.quiz-result {
+  margin: 20px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 20px;
+  padding: 36px 24px; text-align: center; display: none;
 }
-.result h2   { color: #fff; font-size: 18px; font-weight: 800; }
-.result .big { font-size: 54px; font-weight: 900; color: #5DADE2; margin: 10px 0 4px; line-height: 1; }
-.result .sub { color: rgba(255,255,255,0.65); font-size: 13px; }
-.result .msg { color: #fff; font-size: 14px; font-weight: 700; margin: 12px 0; line-height: 1.5; }
-.retry-btn {
-  margin-top: 14px; padding: 12px 32px; border-radius: 10px;
-  background: #5DADE2; color: #fff; font-family: inherit;
-  font-size: 14px; font-weight: 700; border: none; cursor: pointer; -webkit-appearance: none;
+.result-score { font-size: 56px; font-weight: 900; color: var(--accent); line-height: 1; margin: 12px 0 4px; }
+.result-pct   { font-size: 14px; color: var(--text2); margin-bottom: 12px; }
+.result-msg   { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 20px; line-height: 1.5; }
+.result-btns  { display: flex; gap: 10px; }
+.result-btn {
+  flex: 1; padding: 13px; border-radius: 12px;
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  border: none; cursor: pointer;
 }
+.btn-retry  { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+.btn-finish { background: var(--accent); color: #0D1117; }
+
+/* ══════════════════════════════
+   EXAM DAY SCREEN
+══════════════════════════════ */
+#examScreen {
+  display: none; min-height: 100vh;
+  align-items: center; justify-content: center;
+  padding: 24px; text-align: center;
+  background: var(--bg);
+}
+#examScreen.active { display: flex; flex-direction: column; }
+.exam-emoji { font-size: 64px; margin-bottom: 20px; }
+.exam-title { font-size: 26px; font-weight: 900; color: var(--text); margin-bottom: 10px; }
+.exam-sub   { font-size: 15px; color: var(--text2); line-height: 1.7; margin-bottom: 28px; }
+.exam-card  {
+  background: var(--bg2); border: 1px solid var(--accent);
+  border-radius: 20px; padding: 24px 28px; max-width: 400px;
+  font-size: 18px; font-weight: 800; color: var(--accent); margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* ══════════════════════════════
+   UTILITIES
+══════════════════════════════ */
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>ISTQB FL &mdash; 1일차 예상문제</h1>
-  <p>소프트웨어 테스팅의 기초 &middot; 총 10문제</p>
+<!-- ── SETUP SCREEN ── -->
+<div id="setupScreen" class="screen">
+  <div class="setup-card">
+    <div class="setup-logo">&#x1F4DA;</div>
+    <h1>ISTQB FL Study</h1>
+    <p>시험일을 입력하면<br>남은 기간에 맞게 학습 일정을 자동으로 만들어드려요.</p>
+    <div class="setup-label">시험 예정일</div>
+    <input type="date" class="date-input" id="examDate">
+    <button class="start-btn" onclick="startStudy()">학습 시작하기</button>
+  </div>
 </div>
 
-<div class="scorebar">
-  <div class="pill"><div class="val" id="sc">0</div><div class="lbl">맞은 문제</div></div>
-  <div class="pill"><div class="val" id="sw">0</div><div class="lbl">틀린 문제</div></div>
-  <div class="pill"><div class="val" id="sl">10</div><div class="lbl">남은 문제</div></div>
+<!-- ── MAIN SCREEN ── -->
+<div id="mainScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">ISTQB FL</div>
+    <div class="topbar-dday" id="ddayBadge">D-??</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-title">FOUNDATION LEVEL</div>
+    <div class="hero-sub" id="heroGreet">안녕하세요!</div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>전체 진도</span>
+        <span id="progressText">0 / 11일차</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-val" id="statDone">0</div><div class="stat-lbl">완료한 날</div></div>
+    <div class="stat-card"><div class="stat-val" id="statLeft">11</div><div class="stat-lbl">남은 날</div></div>
+    <div class="stat-card"><div class="stat-val" id="statStreak">0</div><div class="stat-lbl">연속 학습</div></div>
+  </div>
+
+  <div class="section-title">CURRICULUM</div>
+  <div class="day-list" id="dayList"></div>
 </div>
 
-<div id="quizList"></div>
+<!-- ── STUDY SCREEN ── -->
+<div id="studyScreen" class="screen">
+  <div class="study-topbar">
+    <div class="back-btn" onclick="goMain()">&#8592;</div>
+    <div class="study-topbar-title" id="studyTopTitle"></div>
+  </div>
+  <div class="study-hero">
+    <div class="study-day-label" id="studyDayLabel"></div>
+    <div class="study-title"  id="studyTitle"></div>
+    <div class="study-chapter" id="studyChapter"></div>
+  </div>
+  <div class="study-content" id="studyContent"></div>
+  <div class="complete-wrap">
+    <button class="complete-btn" id="completeBtn" onclick="completeStudy()">다 읽었어요 - 문제 풀기</button>
+  </div>
+</div>
 
-<div class="result" id="result">
-  <h2>풀이 완료!</h2>
-  <div class="big" id="rScore"></div>
-  <div class="sub" id="rPct"></div>
-  <div class="msg" id="rMsg"></div>
-  <button class="retry-btn" onclick="retry()">다시 풀기</button>
+<!-- ── QUIZ SCREEN ── -->
+<div id="quizScreen" class="screen">
+  <div class="quiz-topbar">
+    <div class="back-btn" onclick="goMain()">&#8592;</div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizProgFill" style="width:0%"></div></div>
+    <div class="quiz-count" id="quizCount">0/0</div>
+  </div>
+  <div class="quiz-content" id="quizContent"></div>
+  <div class="quiz-result" id="quizResult">
+    <div style="font-size:36px; margin-bottom:12px;">&#127881;</div>
+    <div style="font-size:16px; font-weight:800; color:var(--text);">퀴즈 완료!</div>
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-pct"   id="resultPct"></div>
+    <div class="result-msg"   id="resultMsg"></div>
+    <div class="result-btns">
+      <button class="result-btn btn-retry"  onclick="retryQuiz()">다시 풀기</button>
+      <button class="result-btn btn-finish" onclick="finishDay()">완료하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── EXAM DAY SCREEN ── -->
+<div id="examScreen" class="screen">
+  <div class="exam-emoji">&#127942;</div>
+  <div class="exam-title">드디어 시험일이에요!</div>
+  <div class="exam-sub">그동안 정말 열심히 준비했어요.<br>지금까지 쌓아온 실력을 믿으세요.</div>
+  <div class="exam-card">"준비된 자에게<br>행운은 따라온다"</div>
+  <div style="font-size:15px; color:var(--accent); font-weight:800;">ISTQB FL 시험, 건승하세요! &#127775;</div>
 </div>
 
 <script>
-var Q = [
-  { type:'obj', q:'다음 중 소프트웨어 테스팅에 대한 설명으로 가장 올바른 것은?',
-    opts:['테스팅은 소프트웨어에 결함이 없음을 증명하는 활동이다.',
-          '테스팅은 소프트웨어 실행을 통해서만 수행될 수 있다.',
-          '테스팅은 결함의 존재를 보여주는 활동이며, 결함이 없음을 증명하지는 않는다.',
-          '테스팅은 개발자가 코드를 완성한 후에만 시작해야 한다.'],
-    ans:2, ex:'원리 1: 테스팅은 결함의 존재를 보여줄 뿐, 결함이 없음을 증명하지 않습니다. 정적 활동(리뷰)도 테스팅에 포함되므로 실행만이 테스팅이 아닙니다.' },
-
-  { type:'obj', q:'개발자가 코드에 잘못된 조건식을 작성해 로그인이 불가능해졌다. "잘못된 조건식을 코드에 작성한 행위"에 해당하는 ISTQB 용어는?',
-    opts:['결함 (Defect)','장애 (Failure)','오류 (Error)','리스크 (Risk)'],
-    ans:2, ex:'오류(Error/Mistake)는 사람이 만들어내는 실수 자체입니다. 오류 -> 결함(코드) -> 장애(실행 현상) 순서로 이어집니다.' },
-
-  { type:'obj', q:'동일한 테스트 케이스를 반복 실행하면 더 이상 새로운 결함을 발견하지 못하게 된다는 테스팅 원리는?',
-    opts:['결함 집중 (Defect Clustering)','살충제 역설 (Pesticide Paradox)','조기 테스팅 (Early Testing)','완벽한 테스팅 불가 (Exhaustive Testing is Impossible)'],
-    ans:1, ex:'살충제 역설(원리 5): 같은 테스트를 반복하면 새 결함을 발견하지 못합니다. 주기적으로 테스트 케이스를 갱신해야 합니다.' },
-
-  { type:'obj', q:'소프트웨어 결함의 80%가 전체 모듈의 20%에 집중된다는 테스팅 원리와 관련 있는 법칙은?',
-    opts:['오캄의 면도날','파레토 법칙 (Pareto Principle)','머피의 법칙','브룩스의 법칙'],
-    ans:1, ex:'결함 집중(원리 4): 결함은 소수의 모듈에 집중되는 경향이 있으며, 이는 파레토 법칙(80:20 법칙)으로 설명됩니다.' },
-
-  { type:'obj', q:'테스트 레벨의 순서가 올바른 것은?',
-    opts:['컴포넌트 -> 시스템 -> 통합 -> 인수','인수 -> 시스템 -> 통합 -> 컴포넌트','컴포넌트 -> 통합 -> 시스템 -> 인수','통합 -> 컴포넌트 -> 시스템 -> 인수'],
-    ans:2, ex:'테스트 레벨은 작은 단위부터: 컴포넌트 -> 통합 -> 시스템 -> 인수 테스팅 순서입니다.' },
-
-  { type:'obj', q:'고객이나 최종 사용자가 직접 수행하며, 소프트웨어 출시 승인 여부를 결정하는 테스트 레벨은?',
-    opts:['컴포넌트 테스팅','통합 테스팅','시스템 테스팅','인수 테스팅'],
-    ans:3, ex:'인수 테스팅(Acceptance Testing): 고객/최종 사용자가 비즈니스 요구사항 기준으로 수행하며, 소프트웨어 출시 여부를 최종 승인하는 단계입니다.' },
-
-  { type:'obj', q:'결함이 전혀 없는 소프트웨어라도 사용자 요구사항을 충족하지 못하면 품질이 좋다고 할 수 없다는 원리는?',
-    opts:['살충제 역설 (Pesticide Paradox)','오류 부재의 오류 (Absence-of-Errors Fallacy)','결함 집중 (Defect Clustering)','테스팅은 상황에 의존한다'],
-    ans:1, ex:'오류 부재의 오류(원리 7): 결함을 모두 제거해도 요구사항을 충족하지 못하면 품질 좋은 소프트웨어라 할 수 없습니다.' },
-
-  { type:'short', q:'개발자가 코드 작성 중 저지른 "실수 행위" 자체를 가리키는 ISTQB 용어를 쓰시오.',
-    ans:['오류','error','mistake'], ex:'오류(Error/Mistake): 사람이 만들어내는 실수 자체입니다. 오류 -> 결함 -> 장애 순서를 꼭 기억하세요.' },
-
-  { type:'short', q:'"입력값과 실행 경로 조합이 무한하므로 모든 경우를 테스트하는 것은 불가능하다"는 테스팅 원리를 쓰시오.',
-    ans:['완벽한 테스팅은 불가능','완벽한 테스팅 불가','exhaustive testing','완전한 테스팅 불가'], ex:'원리 2: 완벽한 테스팅(Exhaustive Testing)은 불가능합니다. 리스크 기반 접근으로 우선순위를 설정해야 합니다.' },
-
-  { type:'short', q:'테스트 프로세스에서 "무엇을 테스트할지" 결정하고 테스트 컨디션을 식별하는 단계 이름을 쓰시오.',
-    ans:['테스트 분석','test analysis','분석'], ex:'테스트 분석(Test Analysis): 무엇을 테스트할지 결정하는 단계. 다음 단계인 테스트 설계에서 어떻게 테스트할지를 결정합니다.' }
+/* ══════════════════════════════
+   DATA
+══════════════════════════════ */
+var CURRICULUM = [
+  { day:1,  title:'소프트웨어 테스팅의 기초',      chapter:'Chapter 1',  available: true },
+  { day:2,  title:'소프트웨어 개발 수명주기',       chapter:'Chapter 2',  available: false },
+  { day:3,  title:'테스트 레벨과 유형',             chapter:'Chapter 2',  available: false },
+  { day:4,  title:'정적 테스팅',                   chapter:'Chapter 3',  available: false },
+  { day:5,  title:'테스트 기법 기초',               chapter:'Chapter 4',  available: false },
+  { day:6,  title:'블랙박스 테스트 기법',           chapter:'Chapter 4',  available: false },
+  { day:7,  title:'화이트박스 & 경험 기반 기법',    chapter:'Chapter 4',  available: false },
+  { day:8,  title:'테스트 계획과 추정',             chapter:'Chapter 5',  available: false },
+  { day:9,  title:'테스트 모니터링과 제어',          chapter:'Chapter 5',  available: false },
+  { day:10, title:'형상관리와 결함 관리',            chapter:'Chapter 5',  available: false },
+  { day:11, title:'테스트 지원 도구',               chapter:'Chapter 6',  available: false },
 ];
 
-var TOTAL = Q.length, answered = 0, correct = 0;
+/* 1일차 학습 콘텐츠 */
+var CONTENT = {
+  1: [
+    { type:'h1', num:'01', text:'테스팅이란 무엇인가?' },
+    { type:'h2', text:'1.1 소프트웨어 테스팅의 정의' },
+    { type:'bullet', html:'소프트웨어의 <b>품질을 평가</b>하고 <b>결함을 발견</b>하기 위한 체계적인 활동' },
+    { type:'bullet', html:'단순한 실행이 아닌 계획 + 분석 + 설계 + 실행이 모두 포함된 프로세스' },
+    { type:'bullet', html:'테스팅 = <b>정적 활동</b>(리뷰, 인스펙션) + <b>동적 활동</b>(소프트웨어 실행)' },
+
+    { type:'h2', text:'1.2 왜 테스팅이 필요한가?' },
+    { type:'bullet', html:'결함(Defect)이 실행되면 장애(Failure) 발생 -> 비즈니스 손실 및 신뢰도 하락' },
+    { type:'bullet', html:'결함은 <b>조기에 발견할수록</b> 수정 비용이 적게 든다' },
+    { type:'callout', title:'핵심', text:'결함 발견 비용은 발견 시점이 늦을수록 기하급수적으로 증가한다 (조기 테스팅의 가치)' },
+
+    { type:'h2', text:'1.3 오류 vs 결함 vs 장애 [자주 출제]' },
+    { type:'table',
+      headers: ['구분', '정의', '예시'],
+      rows: [
+        ['<b>오류 (Error)</b>', '사람이 만들어내는 실수', '잘못된 조건식 작성'],
+        ['<b>결함 (Defect)</b>', '오류로 인해 코드에 존재하는 결점', 'if문 조건식 오류'],
+        ['<b>장애 (Failure)</b>', '결함이 실행되어 나타나는 현상', '로그인 불가, 다운'],
+      ]
+    },
+    { type:'bullet', html:'<b>흐름:</b> 오류(사람) -> 결함(코드) -> 장애(실행 현상)' },
+    { type:'bullet', html:'모든 결함이 장애를 유발하진 않는다 (실행 경로에 따라 다름)' },
+
+    { type:'h1', num:'02', text:'테스팅의 7가지 원리 [핵심 암기]' },
+    { type:'principle', num:'원리 1', title:'결함의 존재를 보여줄 뿐, 없음을 증명하지 않는다', desc:'테스트 통과 != 결함 없음. <b>매우 자주 출제</b>' },
+    { type:'principle', num:'원리 2', title:'완벽한 테스팅은 불가능하다 (Exhaustive Testing)', desc:'입력/경로 조합이 무한 -> <b>리스크 기반 우선순위</b> 설정' },
+    { type:'principle', num:'원리 3', title:'조기 테스팅이 시간과 비용을 절약한다', desc:'요구사항 단계부터 테스트 설계 시작' },
+    { type:'principle', num:'원리 4', title:'결함은 집중된다 (Defect Clustering)', desc:'80%의 결함이 20%의 모듈에서 발생. <b>파레토 법칙</b>' },
+    { type:'principle', num:'원리 5', title:'살충제 역설 (Pesticide Paradox)', desc:'같은 테스트 반복 -> 새 결함 발견 불가. <b>주기적 케이스 갱신 필요</b>' },
+    { type:'principle', num:'원리 6', title:'테스팅은 상황에 의존한다 (Context Dependent)', desc:'항공 SW vs 게임 SW: 적용 방식이 다름' },
+    { type:'principle', num:'원리 7', title:'오류 부재의 오류 (Absence-of-Errors Fallacy)', desc:'결함이 없어도 요구사항 미충족이면 품질 좋다고 할 수 없음' },
+
+    { type:'h1', num:'03', text:'테스트 프로세스' },
+    { type:'h2', text:'2.1 테스트 프로세스 7단계' },
+    { type:'bullet', html:'<b>Step 1.</b> 테스트 계획 - 범위, 전략, 일정, 자원 결정' },
+    { type:'bullet', html:'<b>Step 2.</b> 테스트 모니터링 & 제어 - 계획 대비 진행 추적' },
+    { type:'bullet', html:'<b>Step 3.</b> 테스트 분석 - "무엇을 테스트할지" -> 테스트 컨디션 식별' },
+    { type:'bullet', html:'<b>Step 4.</b> 테스트 설계 - "어떻게 테스트할지" -> 테스트 케이스 작성' },
+    { type:'bullet', html:'<b>Step 5.</b> 테스트 구현 - 스크립트, 데이터, 환경 준비' },
+    { type:'bullet', html:'<b>Step 6.</b> 테스트 실행 - 실제 수행 및 결과 기록' },
+    { type:'bullet', html:'<b>Step 7.</b> 테스트 완료 - 산출물 정리, 교훈 공유' },
+
+    { type:'h2', text:'2.2 테스트 레벨 [자주 출제]' },
+    { type:'table',
+      headers: ['레벨', '대상', '주체', '목적'],
+      rows: [
+        ['<b>컴포넌트</b>', '개별 모듈', '개발자', '코드 레벨 결함'],
+        ['<b>통합</b>', '컴포넌트 간 인터페이스', '개발자/테스터', '인터페이스 결함'],
+        ['<b>시스템</b>', '전체 시스템', '독립 테스터', '요구사항 충족'],
+        ['<b>인수</b>', '비즈니스 요구사항', '고객/사용자', '출시 승인'],
+      ]
+    },
+    { type:'callout', title:'순서 암기', text:'컴포넌트 -> 통합 -> 시스템 -> 인수 (작은 단위에서 큰 단위로)' },
+  ]
+};
+
+var QUIZ = {
+  1: [
+    { q:'다음 중 소프트웨어 테스팅에 대한 설명으로 가장 올바른 것은?',
+      opts:['테스팅은 소프트웨어에 결함이 없음을 증명하는 활동이다.',
+            '테스팅은 소프트웨어 실행을 통해서만 수행될 수 있다.',
+            '테스팅은 결함의 존재를 보여주는 활동이며, 결함이 없음을 증명하지는 않는다.',
+            '테스팅은 개발자가 코드를 완성한 후에만 시작해야 한다.'],
+      ans:2, ex:'원리 1: 테스팅은 결함의 존재를 보여줄 뿐, 결함이 없음을 증명하지 않습니다. 정적 활동(리뷰)도 테스팅에 포함됩니다.' },
+    { q:'개발자가 코드에 잘못된 조건식을 작성해 로그인이 불가능해졌다. "잘못된 조건식을 코드에 작성한 행위"에 해당하는 ISTQB 용어는?',
+      opts:['결함 (Defect)','장애 (Failure)','오류 (Error)','리스크 (Risk)'],
+      ans:2, ex:'오류(Error/Mistake)는 사람이 만들어내는 실수 자체입니다. 오류 -> 결함(코드) -> 장애(실행 현상) 순서로 이어집니다.' },
+    { q:'동일한 테스트 케이스를 반복 실행하면 더 이상 새로운 결함을 발견하지 못하게 된다는 테스팅 원리는?',
+      opts:['결함 집중 (Defect Clustering)','살충제 역설 (Pesticide Paradox)','조기 테스팅 (Early Testing)','완벽한 테스팅 불가'],
+      ans:1, ex:'살충제 역설(원리 5): 같은 테스트를 반복하면 새 결함을 발견하지 못합니다. 주기적으로 테스트 케이스를 갱신해야 합니다.' },
+    { q:'소프트웨어 결함의 80%가 전체 모듈의 20%에 집중된다는 원리와 관련 있는 법칙은?',
+      opts:['오캄의 면도날','파레토 법칙 (Pareto Principle)','머피의 법칙','브룩스의 법칙'],
+      ans:1, ex:'결함 집중(원리 4): 결함은 소수의 모듈에 집중되며, 파레토 법칙(80:20)으로 설명됩니다.' },
+    { q:'테스트 레벨의 순서가 올바른 것은?',
+      opts:['컴포넌트 -> 시스템 -> 통합 -> 인수','인수 -> 시스템 -> 통합 -> 컴포넌트','컴포넌트 -> 통합 -> 시스템 -> 인수','통합 -> 컴포넌트 -> 시스템 -> 인수'],
+      ans:2, ex:'테스트 레벨은 작은 단위부터: 컴포넌트 -> 통합 -> 시스템 -> 인수 테스팅 순서입니다.' },
+    { q:'고객이나 최종 사용자가 직접 수행하며, 소프트웨어 출시 승인 여부를 결정하는 테스트 레벨은?',
+      opts:['컴포넌트 테스팅','통합 테스팅','시스템 테스팅','인수 테스팅'],
+      ans:3, ex:'인수 테스팅(Acceptance Testing): 고객/최종 사용자가 비즈니스 요구사항 기준으로 수행하며, 출시 여부를 최종 승인합니다.' },
+    { q:'결함이 전혀 없는 소프트웨어라도 사용자 요구사항을 충족하지 못하면 품질이 좋다고 할 수 없다는 원리는?',
+      opts:['살충제 역설','오류 부재의 오류 (Absence-of-Errors Fallacy)','결함 집중','테스팅은 상황에 의존한다'],
+      ans:1, ex:'오류 부재의 오류(원리 7): 결함이 없어도 요구사항을 충족하지 못하면 품질 좋은 소프트웨어라 할 수 없습니다.' },
+  ]
+};
+
+/* ══════════════════════════════
+   STATE
+══════════════════════════════ */
+var state = {
+  examDate: null,
+  completed: [],   // 완료한 day 번호들
+  streak: 0,
+};
+var currentDay = 1;
+var quizAnswered = 0, quizCorrect = 0;
 var LTRS = ['A','B','C','D'];
 
-function build() {
-  answered = 0; correct = 0;
-  updateBar();
-  var list = document.getElementById('quizList');
-  list.innerHTML = '';
-  document.getElementById('result').style.display = 'none';
-  for (var i = 0; i < Q.length; i++) list.appendChild(makeCard(i));
+/* ══════════════════════════════
+   INIT
+══════════════════════════════ */
+window.onload = function() {
+  var saved = localStorage.getItem('istqb_state');
+  if (saved) {
+    try { state = JSON.parse(saved); } catch(e) {}
+  }
+  var today = new Date();
+  today.setHours(0,0,0,0);
+
+  if (state.examDate) {
+    var exam = new Date(state.examDate);
+    exam.setHours(0,0,0,0);
+    var diff = Math.ceil((exam - today) / 86400000);
+    if (diff <= 0) { showScreen('examScreen'); return; }
+    showScreen('mainScreen');
+    renderMain();
+  } else {
+    var defDate = new Date(today);
+    defDate.setDate(defDate.getDate() + 36);
+    document.getElementById('examDate').value = defDate.toISOString().split('T')[0];
+    showScreen('setupScreen');
+  }
+};
+
+function save() {
+  localStorage.setItem('istqb_state', JSON.stringify(state));
 }
 
-function makeCard(i) {
-  var q = Q[i];
+/* ══════════════════════════════
+   SETUP
+══════════════════════════════ */
+function startStudy() {
+  var val = document.getElementById('examDate').value;
+  if (!val) return alert('시험일을 선택해 주세요!');
+  var exam = new Date(val);
+  var today = new Date(); today.setHours(0,0,0,0);
+  if (exam <= today) return alert('시험일은 오늘 이후여야 해요!');
+  state.examDate = val;
+  state.completed = [];
+  state.streak = 0;
+  save();
+  showScreen('mainScreen');
+  renderMain();
+}
+
+/* ══════════════════════════════
+   MAIN
+══════════════════════════════ */
+function renderMain() {
+  var today = new Date(); today.setHours(0,0,0,0);
+  var exam  = new Date(state.examDate); exam.setHours(0,0,0,0);
+  var diff  = Math.ceil((exam - today) / 86400000);
+
+  document.getElementById('ddayBadge').textContent = diff > 0 ? 'D-' + diff : 'D-DAY';
+
+  var hour = today.getHours();
+  var greet = hour < 12 ? '좋은 아침이에요!' : hour < 18 ? '오늘도 화이팅!' : '오늘 학습 잊지 마세요!';
+  document.getElementById('heroGreet').textContent = greet;
+
+  var done = state.completed.length;
+  var total = CURRICULUM.length;
+  document.getElementById('progressText').textContent = done + ' / ' + total + '일차';
+  document.getElementById('progressFill').style.width = Math.round(done/total*100) + '%';
+  document.getElementById('statDone').textContent   = done;
+  document.getElementById('statLeft').textContent   = total - done;
+  document.getElementById('statStreak').textContent = state.streak || 0;
+
+  var list = document.getElementById('dayList');
+  list.innerHTML = '';
+  CURRICULUM.forEach(function(cur) {
+    list.appendChild(makeDayCard(cur));
+  });
+}
+
+function makeDayCard(cur) {
+  var done      = state.completed.indexOf(cur.day) !== -1;
+  var available = cur.available;
   var card = document.createElement('div');
-  card.className = 'card';
+  card.className = 'day-card ' + (done ? 'completed' : available ? 'unlocked' : 'locked');
 
   var head = document.createElement('div');
-  head.className = 'card-head';
-  var num = document.createElement('div');
-  num.className = 'q-num';
-  num.textContent = i + 1;
-  var info = document.createElement('div');
-  info.style.flex = '1';
-  var tag = document.createElement('span');
-  tag.className = 'q-tag ' + (q.type === 'obj' ? 'tag-obj' : 'tag-short');
-  tag.textContent = q.type === 'obj' ? '4지선다' : '단답형';
-  var txt = document.createElement('div');
-  txt.className = 'q-text';
-  txt.textContent = q.q;
-  info.appendChild(tag); info.appendChild(txt);
-  head.appendChild(num); head.appendChild(info);
-  card.appendChild(head);
-
-  if (q.type === 'obj') {
-    var opts = document.createElement('div');
-    opts.className = 'options';
-    for (var j = 0; j < q.opts.length; j++) opts.appendChild(makeOpt(i, j, opts));
-    card.appendChild(opts);
-  } else {
-    var area = document.createElement('div');
-    area.className = 'short-area';
-    var inp = document.createElement('textarea');
-    inp.className = 'short-input';
-    inp.rows = 2;
-    inp.placeholder = '답을 입력하세요...';
-    var sbtn = document.createElement('button');
-    sbtn.className = 'submit-btn';
-    sbtn.textContent = '제출';
-    (function(qi, si, sb) {
-      sbtn.onclick = function() { submitShort(qi, si, sb); };
-    })(i, inp, sbtn);
-    area.appendChild(inp); area.appendChild(sbtn);
-    card.appendChild(area);
+  head.className = 'day-card-head';
+  if ((available || done) && !(!available && !done)) {
+    head.onclick = function() { openDay(cur.day); };
   }
 
+  var icon = document.createElement('div');
+  icon.className = 'day-icon ' + (done ? 'done' : available ? 'active' : 'lock');
+  icon.textContent = done ? '\u2713' : available ? '\u{1F4D6}' : '\uD83D\uDD12';
+
+  var info = document.createElement('div');
+  info.className = 'day-info';
+  var lbl = document.createElement('div');
+  lbl.className = 'day-label';
+  lbl.textContent = cur.chapter + '  |  DAY ' + cur.day;
+  var title = document.createElement('div');
+  title.className = 'day-title';
+  title.textContent = cur.title;
+
+  info.appendChild(lbl);
+  info.appendChild(title);
+
+  var badge = document.createElement('div');
+  badge.className = 'day-badge ' + (done ? 'badge-done' : available ? 'badge-active' : 'badge-lock');
+  badge.textContent = done ? '완료' : available ? '학습하기' : '잠금';
+
+  head.appendChild(icon);
+  head.appendChild(info);
+  head.appendChild(badge);
+  card.appendChild(head);
+  return card;
+}
+
+function openDay(day) {
+  var cur = CURRICULUM.find(function(c){ return c.day === day; });
+  if (!cur || (!cur.available && state.completed.indexOf(day) === -1)) return;
+  currentDay = day;
+  document.getElementById('studyTopTitle').textContent = 'Day ' + day;
+  document.getElementById('studyDayLabel').textContent = cur.chapter + '  |  DAY ' + day;
+  document.getElementById('studyTitle').textContent    = cur.title;
+  document.getElementById('studyChapter').textContent  = cur.chapter;
+
+  var isDone = state.completed.indexOf(day) !== -1;
+  var btn = document.getElementById('completeBtn');
+  btn.textContent = isDone ? '이미 완료한 일차예요' : '다 읽었어요 - 문제 풀기';
+  btn.disabled = isDone;
+
+  renderContent(day);
+  showScreen('studyScreen');
+}
+
+function renderContent(day) {
+  var items = CONTENT[day];
+  var wrap = document.getElementById('studyContent');
+  wrap.innerHTML = '';
+  if (!items) {
+    wrap.innerHTML = '<p style="color:var(--text2);padding:20px 0;text-align:center;">준비 중인 콘텐츠예요.<br>내일 업데이트될 예정이에요!</p>';
+    return;
+  }
+  items.forEach(function(item) {
+    if (item.type === 'h1') {
+      var el = document.createElement('div');
+      el.className = 'content-h1';
+      el.innerHTML = '<span>' + item.num + '</span>' + item.text;
+      wrap.appendChild(el);
+    } else if (item.type === 'h2') {
+      var el = document.createElement('div');
+      el.className = 'content-h2';
+      el.textContent = item.text;
+      wrap.appendChild(el);
+    } else if (item.type === 'bullet') {
+      var el = document.createElement('div');
+      el.className = 'content-bullet';
+      el.innerHTML = item.html;
+      wrap.appendChild(el);
+    } else if (item.type === 'callout') {
+      var el = document.createElement('div');
+      el.className = 'callout';
+      el.innerHTML = '<b>' + item.title + '</b>' + item.text;
+      wrap.appendChild(el);
+    } else if (item.type === 'table') {
+      var t = document.createElement('table');
+      t.className = 'content-table';
+      var thead = document.createElement('thead');
+      var tr = document.createElement('tr');
+      item.headers.forEach(function(h) {
+        var th = document.createElement('th'); th.textContent = h; tr.appendChild(th);
+      });
+      thead.appendChild(tr); t.appendChild(thead);
+      var tbody = document.createElement('tbody');
+      item.rows.forEach(function(row) {
+        var tr = document.createElement('tr');
+        row.forEach(function(cell) {
+          var td = document.createElement('td'); td.innerHTML = cell; tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      t.appendChild(tbody); wrap.appendChild(t);
+    } else if (item.type === 'principle') {
+      var el = document.createElement('div');
+      el.className = 'principle';
+      el.innerHTML = '<div class="principle-num">' + item.num + '</div>' +
+        '<div class="principle-title">' + item.title + '</div>' +
+        '<div class="principle-desc">' + item.desc + '</div>';
+      wrap.appendChild(el);
+    }
+  });
+}
+
+function completeStudy() {
+  if (QUIZ[currentDay]) {
+    startQuiz(currentDay);
+  } else {
+    finishDay();
+  }
+}
+
+function goMain() {
+  showScreen('mainScreen');
+  renderMain();
+}
+
+/* ══════════════════════════════
+   QUIZ
+══════════════════════════════ */
+function startQuiz(day) {
+  currentDay = day;
+  quizAnswered = 0; quizCorrect = 0;
+  document.getElementById('quizResult').style.display = 'none';
+  renderQuiz(day);
+  showScreen('quizScreen');
+  updateQuizProgress();
+}
+
+function renderQuiz(day) {
+  var qs = QUIZ[day];
+  var wrap = document.getElementById('quizContent');
+  wrap.innerHTML = '';
+  document.getElementById('quizResult').style.display = 'none';
+  qs.forEach(function(q, i) { wrap.appendChild(makeQuizCard(q, i, qs.length)); });
+}
+
+function makeQuizCard(q, i, total) {
+  var card = document.createElement('div');
+  card.className = 'quiz-card';
+
+  var head = document.createElement('div');
+  head.className = 'quiz-card-head';
+  var num = document.createElement('div');
+  num.className = 'quiz-num';
+  num.textContent = i + 1;
+  var qt = document.createElement('div');
+  qt.className = 'quiz-q';
+  qt.textContent = q.q;
+  head.appendChild(num); head.appendChild(qt);
+  card.appendChild(head);
+
+  var opts = document.createElement('div');
+  opts.className = 'quiz-opts';
+  q.opts.forEach(function(o, oi) {
+    var btn = document.createElement('div');
+    btn.className = 'quiz-opt';
+    var ltr = document.createElement('div');
+    ltr.className = 'opt-ltr';
+    ltr.textContent = LTRS[oi];
+    var sp = document.createElement('span');
+    sp.textContent = o;
+    btn.appendChild(ltr); btn.appendChild(sp);
+    btn.addEventListener('click', function() { chooseOpt(i, oi, opts, q, total); });
+    opts.appendChild(btn);
+  });
+  card.appendChild(opts);
+
   var fb = document.createElement('div');
-  fb.className = 'feedback';
-  fb.id = 'fb' + i;
+  fb.className = 'quiz-fb';
+  fb.id = 'qfb' + i;
   card.appendChild(fb);
   return card;
 }
 
-function makeOpt(qi, oi, optsEl) {
-  var btn = document.createElement('div');
-  btn.className = 'opt';
-  var ltr = document.createElement('div');
-  ltr.className = 'opt-ltr';
-  ltr.textContent = LTRS[oi];
-  var sp = document.createElement('span');
-  sp.textContent = Q[qi].opts[oi];
-  btn.appendChild(ltr); btn.appendChild(sp);
-  btn.addEventListener('click', function() { chooseOpt(qi, oi, optsEl); });
-  return btn;
-}
-
-function chooseOpt(qi, oi, optsEl) {
-  var btns = optsEl.querySelectorAll('.opt');
+function chooseOpt(qi, oi, optsEl, q, total) {
+  var btns = optsEl.querySelectorAll('.quiz-opt');
   if (btns[0].classList.contains('disabled')) return;
   for (var k = 0; k < btns.length; k++) btns[k].classList.add('disabled');
-  var isC = oi === Q[qi].ans;
+  var isC = oi === q.ans;
   btns[oi].classList.add(isC ? 'correct' : 'wrong');
-  if (!isC) btns[Q[qi].ans].classList.add('correct');
-  showFb(qi, isC, Q[qi].ex, null);
-  record(isC);
+  if (!isC) btns[q.ans].classList.add('correct');
+  var fb = document.getElementById('qfb' + qi);
+  fb.className = 'quiz-fb ' + (isC ? 'sc' : 'sw');
+  fb.innerHTML = '<strong>' + (isC ? '정답!' : '오답') + '</strong>' + q.ex;
+  quizAnswered++;
+  if (isC) quizCorrect++;
+  updateQuizProgress();
+  if (quizAnswered === total) setTimeout(showQuizResult, 600);
 }
 
-function submitShort(qi, inp, btn) {
-  var val = inp.value.trim().toLowerCase();
-  if (!val) return;
-  var isC = false;
-  for (var k = 0; k < Q[qi].ans.length; k++) {
-    if (val.indexOf(Q[qi].ans[k].toLowerCase()) !== -1) { isC = true; break; }
+function updateQuizProgress() {
+  var total = QUIZ[currentDay] ? QUIZ[currentDay].length : 1;
+  var pct = Math.round(quizAnswered / total * 100);
+  document.getElementById('quizProgFill').style.width = pct + '%';
+  document.getElementById('quizCount').textContent = quizAnswered + '/' + total;
+}
+
+function showQuizResult() {
+  var total = QUIZ[currentDay].length;
+  var pct = Math.round(quizCorrect / total * 100);
+  document.getElementById('resultScore').textContent = quizCorrect + '/' + total;
+  document.getElementById('resultPct').textContent   = '정답률 ' + pct + '%';
+  document.getElementById('resultMsg').textContent   =
+    pct >= 90 ? '완벽해요! 완전히 마스터했어요.' :
+    pct >= 70 ? '잘 하고 있어요! 틀린 문제 복습해 보세요.' :
+    pct >= 50 ? '조금 더 복습이 필요해요.' :
+                '정리본을 다시 읽고 재도전해 보세요!';
+  document.getElementById('quizResult').style.display = 'block';
+  document.getElementById('quizResult').scrollIntoView({ behavior:'smooth' });
+}
+
+function retryQuiz() {
+  quizAnswered = 0; quizCorrect = 0;
+  renderQuiz(currentDay);
+  updateQuizProgress();
+  window.scrollTo(0, 0);
+}
+
+function finishDay() {
+  if (state.completed.indexOf(currentDay) === -1) {
+    state.completed.push(currentDay);
+    state.streak = (state.streak || 0) + 1;
+    // 다음 일차 unlock
+    var next = CURRICULUM.find(function(c){ return c.day === currentDay + 1; });
+    if (next) next.available = true;
+    save();
   }
-  inp.disabled = true; btn.disabled = true;
-  inp.classList.add(isC ? 'c' : 'w');
-  showFb(qi, isC, Q[qi].ex, isC ? null : '정답: ' + Q[qi].ans[0]);
-  record(isC);
+  goMain();
 }
 
-function showFb(qi, isC, ex, extra) {
-  var fb = document.getElementById('fb' + qi);
-  fb.className = 'feedback ' + (isC ? 'sc' : 'sw');
-  fb.innerHTML = '<strong>' + (isC ? '정답입니다!' : '오답입니다.') + '</strong>' +
-    (extra ? extra + '<br>' : '') + ex;
+/* ══════════════════════════════
+   SCREEN ROUTER
+══════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
 }
-
-function record(isC) {
-  answered++; if (isC) correct++;
-  updateBar();
-  if (answered === TOTAL) setTimeout(showResult, 500);
-}
-
-function updateBar() {
-  document.getElementById('sc').textContent = correct;
-  document.getElementById('sw').textContent = answered - correct;
-  document.getElementById('sl').textContent = TOTAL - answered;
-}
-
-function showResult() {
-  var pct = Math.round(correct / TOTAL * 100);
-  var el = document.getElementById('result');
-  el.style.display = 'block';
-  document.getElementById('rScore').textContent = correct + '/' + TOTAL;
-  document.getElementById('rPct').textContent = '정답률 ' + pct + '%';
-  document.getElementById('rMsg').textContent =
-    pct >= 90 ? '완벽해요! 이 챕터 완전히 마스터했어요.' :
-    pct >= 70 ? '잘 하고 있어요! 틀린 문제 위주로 복습해 보세요.' :
-    pct >= 50 ? '조금 더 복습이 필요해요. 1일차 자료를 다시 확인해 보세요.' :
-                '다시 도전해보세요! 기초 개념부터 차근차근 복습해요.';
-  el.scrollIntoView({ behavior: 'smooth' });
-}
-
-function retry() { build(); window.scrollTo(0, 0); }
-
-build();
 </script>
 </body>
 </html>
