@@ -749,54 +749,54 @@ var CONTENT = {
   1: [
     { type:'h1', num:'01', text:'테스팅이란 무엇인가?' },
     { type:'h2', text:'1.1 소프트웨어 테스팅의 정의' },
-    { type:'bullet', html:'소프트웨어의 <b>품질을 평가</b>하고 <b>결함을 발견</b>하기 위한 체계적인 활동' },
+    { type:'bullet', html:'소프트웨어의 \x3cb\x3e품질을 평가\x3c/b\x3e하고 \x3cb\x3e결함을 발견\x3c/b\x3e하기 위한 체계적인 활동' },
     { type:'bullet', html:'단순한 실행이 아닌 계획 + 분석 + 설계 + 실행이 모두 포함된 프로세스' },
-    { type:'bullet', html:'테스팅 = <b>정적 활동</b>(리뷰, 인스펙션) + <b>동적 활동</b>(소프트웨어 실행)' },
+    { type:'bullet', html:'테스팅 = \x3cb\x3e정적 활동\x3c/b\x3e(리뷰, 인스펙션) + \x3cb\x3e동적 활동\x3c/b\x3e(소프트웨어 실행)' },
 
     { type:'h2', text:'1.2 왜 테스팅이 필요한가?' },
     { type:'bullet', html:'결함(Defect)이 실행되면 장애(Failure) 발생 -> 비즈니스 손실 및 신뢰도 하락' },
-    { type:'bullet', html:'결함은 <b>조기에 발견할수록</b> 수정 비용이 적게 든다' },
+    { type:'bullet', html:'결함은 \x3cb\x3e조기에 발견할수록\x3c/b\x3e 수정 비용이 적게 든다' },
     { type:'callout', title:'핵심', text:'결함 발견 비용은 발견 시점이 늦을수록 기하급수적으로 증가한다 (조기 테스팅의 가치)' },
 
     { type:'h2', text:'1.3 오류 vs 결함 vs 장애 [자주 출제]' },
     { type:'table',
       headers: ['구분', '정의', '예시'],
       rows: [
-        ['<b>오류 (Error)</b>', '사람이 만들어내는 실수', '잘못된 조건식 작성'],
-        ['<b>결함 (Defect)</b>', '오류로 인해 코드에 존재하는 결점', 'if문 조건식 오류'],
-        ['<b>장애 (Failure)</b>', '결함이 실행되어 나타나는 현상', '로그인 불가, 다운'],
+        ['\x3cb\x3e오류 (Error)\x3c/b\x3e', '사람이 만들어내는 실수', '잘못된 조건식 작성'],
+        ['\x3cb\x3e결함 (Defect)\x3c/b\x3e', '오류로 인해 코드에 존재하는 결점', 'if문 조건식 오류'],
+        ['\x3cb\x3e장애 (Failure)\x3c/b\x3e', '결함이 실행되어 나타나는 현상', '로그인 불가, 다운'],
       ]
     },
-    { type:'bullet', html:'<b>흐름:</b> 오류(사람) -> 결함(코드) -> 장애(실행 현상)' },
+    { type:'bullet', html:'\x3cb\x3e흐름:\x3c/b\x3e 오류(사람) -> 결함(코드) -> 장애(실행 현상)' },
     { type:'bullet', html:'모든 결함이 장애를 유발하진 않는다 (실행 경로에 따라 다름)' },
 
     { type:'h1', num:'02', text:'테스팅의 7가지 원리 [핵심 암기]' },
-    { type:'principle', num:'원리 1', title:'결함의 존재를 보여줄 뿐, 없음을 증명하지 않는다', desc:'테스트 통과 != 결함 없음. <b>매우 자주 출제</b>' },
-    { type:'principle', num:'원리 2', title:'완벽한 테스팅은 불가능하다 (Exhaustive Testing)', desc:'입력/경로 조합이 무한 -> <b>리스크 기반 우선순위</b> 설정' },
+    { type:'principle', num:'원리 1', title:'결함의 존재를 보여줄 뿐, 없음을 증명하지 않는다', desc:'테스트 통과 != 결함 없음. \x3cb\x3e매우 자주 출제\x3c/b\x3e' },
+    { type:'principle', num:'원리 2', title:'완벽한 테스팅은 불가능하다 (Exhaustive Testing)', desc:'입력/경로 조합이 무한 -> \x3cb\x3e리스크 기반 우선순위\x3c/b\x3e 설정' },
     { type:'principle', num:'원리 3', title:'조기 테스팅이 시간과 비용을 절약한다', desc:'요구사항 단계부터 테스트 설계 시작' },
-    { type:'principle', num:'원리 4', title:'결함은 집중된다 (Defect Clustering)', desc:'80%의 결함이 20%의 모듈에서 발생. <b>파레토 법칙</b>' },
-    { type:'principle', num:'원리 5', title:'살충제 역설 (Pesticide Paradox)', desc:'같은 테스트 반복 -> 새 결함 발견 불가. <b>주기적 케이스 갱신 필요</b>' },
+    { type:'principle', num:'원리 4', title:'결함은 집중된다 (Defect Clustering)', desc:'80%의 결함이 20%의 모듈에서 발생. \x3cb\x3e파레토 법칙\x3c/b\x3e' },
+    { type:'principle', num:'원리 5', title:'살충제 역설 (Pesticide Paradox)', desc:'같은 테스트 반복 -> 새 결함 발견 불가. \x3cb\x3e주기적 케이스 갱신 필요\x3c/b\x3e' },
     { type:'principle', num:'원리 6', title:'테스팅은 상황에 의존한다 (Context Dependent)', desc:'항공 SW vs 게임 SW: 적용 방식이 다름' },
     { type:'principle', num:'원리 7', title:'오류 부재의 오류 (Absence-of-Errors Fallacy)', desc:'결함이 없어도 요구사항 미충족이면 품질 좋다고 할 수 없음' },
 
     { type:'h1', num:'03', text:'테스트 프로세스' },
     { type:'h2', text:'2.1 테스트 프로세스 7단계' },
-    { type:'bullet', html:'<b>Step 1.</b> 테스트 계획 - 범위, 전략, 일정, 자원 결정' },
-    { type:'bullet', html:'<b>Step 2.</b> 테스트 모니터링 & 제어 - 계획 대비 진행 추적' },
-    { type:'bullet', html:'<b>Step 3.</b> 테스트 분석 - "무엇을 테스트할지" -> 테스트 컨디션 식별' },
-    { type:'bullet', html:'<b>Step 4.</b> 테스트 설계 - "어떻게 테스트할지" -> 테스트 케이스 작성' },
-    { type:'bullet', html:'<b>Step 5.</b> 테스트 구현 - 스크립트, 데이터, 환경 준비' },
-    { type:'bullet', html:'<b>Step 6.</b> 테스트 실행 - 실제 수행 및 결과 기록' },
-    { type:'bullet', html:'<b>Step 7.</b> 테스트 완료 - 산출물 정리, 교훈 공유' },
+    { type:'bullet', html:'\x3cb\x3eStep 1.\x3c/b\x3e 테스트 계획 - 범위, 전략, 일정, 자원 결정' },
+    { type:'bullet', html:'\x3cb\x3eStep 2.\x3c/b\x3e 테스트 모니터링 & 제어 - 계획 대비 진행 추적' },
+    { type:'bullet', html:'\x3cb\x3eStep 3.\x3c/b\x3e 테스트 분석 - "무엇을 테스트할지" -> 테스트 컨디션 식별' },
+    { type:'bullet', html:'\x3cb\x3eStep 4.\x3c/b\x3e 테스트 설계 - "어떻게 테스트할지" -> 테스트 케이스 작성' },
+    { type:'bullet', html:'\x3cb\x3eStep 5.\x3c/b\x3e 테스트 구현 - 스크립트, 데이터, 환경 준비' },
+    { type:'bullet', html:'\x3cb\x3eStep 6.\x3c/b\x3e 테스트 실행 - 실제 수행 및 결과 기록' },
+    { type:'bullet', html:'\x3cb\x3eStep 7.\x3c/b\x3e 테스트 완료 - 산출물 정리, 교훈 공유' },
 
     { type:'h2', text:'2.2 테스트 레벨 [자주 출제]' },
     { type:'table',
       headers: ['레벨', '대상', '주체', '목적'],
       rows: [
-        ['<b>컴포넌트</b>', '개별 모듈', '개발자', '코드 레벨 결함'],
-        ['<b>통합</b>', '컴포넌트 간 인터페이스', '개발자/테스터', '인터페이스 결함'],
-        ['<b>시스템</b>', '전체 시스템', '독립 테스터', '요구사항 충족'],
-        ['<b>인수</b>', '비즈니스 요구사항', '고객/사용자', '출시 승인'],
+        ['\x3cb\x3e컴포넌트\x3c/b\x3e', '개별 모듈', '개발자', '코드 레벨 결함'],
+        ['\x3cb\x3e통합\x3c/b\x3e', '컴포넌트 간 인터페이스', '개발자/테스터', '인터페이스 결함'],
+        ['\x3cb\x3e시스템\x3c/b\x3e', '전체 시스템', '독립 테스터', '요구사항 충족'],
+        ['\x3cb\x3e인수\x3c/b\x3e', '비즈니스 요구사항', '고객/사용자', '출시 승인'],
       ]
     },
     { type:'callout', title:'순서 암기', text:'컴포넌트 -> 통합 -> 시스템 -> 인수 (작은 단위에서 큰 단위로)' },
@@ -823,7 +823,7 @@ var CONTENT = {
     { type:'h1', num:'02', text:'반복적/점진적 개발 모델과 테스팅' },
     { type:'h2', text:'2.1 애자일 개발 [자주 출제]' },
     { type:'bullet', html:'짧은 스프린트(Sprint) 단위로 개발 -> 빠른 피드백과 변경 수용' },
-    { type:'bullet', html:'테스터와 개발자가 <b>긴밀하게 협력</b>, 테스팅이 전체 스프린트에 걸쳐 수행' },
+    { type:'bullet', html:'테스터와 개발자가 \x3cb\x3e긴밀하게 협력\x3c/b\x3e, 테스팅이 전체 스프린트에 걸쳐 수행' },
     { type:'bullet', html:'예시: Scrum, Kanban, XP(eXtreme Programming)' },
     { type:'callout', title:'핵심', text:'애자일에서는 리그레션 테스팅이 매우 중요하다. 매 스프린트마다 이전 기능이 망가지지 않았는지 확인해야 함.' },
 
@@ -840,11 +840,11 @@ var CONTENT = {
     { type:'callout', title:'암기 포인트', text:'상향식 = Driver 필요 / 하향식 = Stub 필요' },
 
     { type:'h1', num:'04', text:'인수 테스팅 종류 [자주 출제]' },
-    { type:'bullet', html:'<b>UAT</b> (사용자 인수): 실제 사용자가 비즈니스 요구사항 기준으로 수행' },
-    { type:'bullet', html:'<b>OAT</b> (운영 인수): 운영팀이 백업, 복구, 설치 등 운영 절차 검증' },
-    { type:'bullet', html:'<b>알파 테스팅</b>: 개발 현장(내부 환경)에서 잠재 고객이 수행' },
-    { type:'bullet', html:'<b>베타 테스팅</b>: 실제 고객 환경에서 잠재 고객이 수행' },
-    { type:'bullet', html:'<b>계약/규정 인수 테스팅</b>: 계약 조건, 법적 규정 준수 여부 확인' },
+    { type:'bullet', html:'\x3cb\x3eUAT\x3c/b\x3e (사용자 인수): 실제 사용자가 비즈니스 요구사항 기준으로 수행' },
+    { type:'bullet', html:'\x3cb\x3eOAT\x3c/b\x3e (운영 인수): 운영팀이 백업, 복구, 설치 등 운영 절차 검증' },
+    { type:'bullet', html:'\x3cb\x3e알파 테스팅\x3c/b\x3e: 개발 현장(내부 환경)에서 잠재 고객이 수행' },
+    { type:'bullet', html:'\x3cb\x3e베타 테스팅\x3c/b\x3e: 실제 고객 환경에서 잠재 고객이 수행' },
+    { type:'bullet', html:'\x3cb\x3e계약/규정 인수 테스팅\x3c/b\x3e: 계약 조건, 법적 규정 준수 여부 확인' },
   ],
   3: [
     { type:'h1', num:'01', text:'테스트 유형 (Test Types)' },
@@ -859,13 +859,13 @@ var CONTENT = {
     },
 
     { type:'h2', text:'1.2 비기능적 테스팅 7종 암기' },
-    { type:'bullet', html:'<b>성능</b>: 응답시간, 처리량, 자원 사용률 측정' },
-    { type:'bullet', html:'<b>부하</b>: 정상 부하 조건에서의 안정성 확인' },
-    { type:'bullet', html:'<b>스트레스</b>: 한계 초과 부하에서 동작 및 복구 능력 확인' },
-    { type:'bullet', html:'<b>보안</b>: 취약점, 무단 접근 가능성 검증' },
-    { type:'bullet', html:'<b>사용성</b>: UI/UX 편의성, 직관성 평가' },
-    { type:'bullet', html:'<b>신뢰성</b>: 장기간 안정적 동작 여부 확인' },
-    { type:'bullet', html:'<b>이식성</b>: 다른 환경(OS, HW)으로 이전 가능성 확인' },
+    { type:'bullet', html:'\x3cb\x3e성능\x3c/b\x3e: 응답시간, 처리량, 자원 사용률 측정' },
+    { type:'bullet', html:'\x3cb\x3e부하\x3c/b\x3e: 정상 부하 조건에서의 안정성 확인' },
+    { type:'bullet', html:'\x3cb\x3e스트레스\x3c/b\x3e: 한계 초과 부하에서 동작 및 복구 능력 확인' },
+    { type:'bullet', html:'\x3cb\x3e보안\x3c/b\x3e: 취약점, 무단 접근 가능성 검증' },
+    { type:'bullet', html:'\x3cb\x3e사용성\x3c/b\x3e: UI/UX 편의성, 직관성 평가' },
+    { type:'bullet', html:'\x3cb\x3e신뢰성\x3c/b\x3e: 장기간 안정적 동작 여부 확인' },
+    { type:'bullet', html:'\x3cb\x3e이식성\x3c/b\x3e: 다른 환경(OS, HW)으로 이전 가능성 확인' },
 
     { type:'h1', num:'02', text:'변경 관련 테스팅 [자주 출제]' },
     { type:'table',
@@ -879,14 +879,14 @@ var CONTENT = {
 
     { type:'h1', num:'03', text:'유지보수 테스팅 (Maintenance Testing)' },
     { type:'h2', text:'3.1 유지보수 유형 4가지' },
-    { type:'bullet', html:'<b>수정 (Corrective)</b>: 버그 수정, 결함 패치' },
-    { type:'bullet', html:'<b>적응 (Adaptive)</b>: 새 OS, DB, HW 환경에 대응' },
-    { type:'bullet', html:'<b>완성 (Perfective)</b>: 새 기능 추가, 성능 개선' },
-    { type:'bullet', html:'<b>예방 (Preventive)</b>: 미래 유지보수성 향상을 위한 리팩토링' },
+    { type:'bullet', html:'\x3cb\x3e수정 (Corrective)\x3c/b\x3e: 버그 수정, 결함 패치' },
+    { type:'bullet', html:'\x3cb\x3e적응 (Adaptive)\x3c/b\x3e: 새 OS, DB, HW 환경에 대응' },
+    { type:'bullet', html:'\x3cb\x3e완성 (Perfective)\x3c/b\x3e: 새 기능 추가, 성능 개선' },
+    { type:'bullet', html:'\x3cb\x3e예방 (Preventive)\x3c/b\x3e: 미래 유지보수성 향상을 위한 리팩토링' },
 
     { type:'h2', text:'3.2 영향도 분석 (Impact Analysis)' },
     { type:'bullet', html:'변경이 기존 시스템에 미치는 영향 범위를 식별하는 활동' },
-    { type:'bullet', html:'리그레션 테스팅의 <b>범위를 결정</b>하는 데 핵심적으로 활용' },
+    { type:'bullet', html:'리그레션 테스팅의 \x3cb\x3e범위를 결정\x3c/b\x3e하는 데 핵심적으로 활용' },
     { type:'callout', title:'순서', text:'영향도 분석 → 리그레션 테스팅 범위 결정 → 유지보수 테스팅 수행' },
   ],
   4: [
@@ -910,18 +910,18 @@ var CONTENT = {
     { type:'bullet', html:'비용이 낮고 빠르나, 체계적 결함 추적이 어려움' },
 
     { type:'h2', text:'2.2 워크스루 (Walkthrough)' },
-    { type:'bullet', html:'<b>작성자(Author)</b>가 직접 산출물을 설명하며 진행' },
+    { type:'bullet', html:'\x3cb\x3e작성자(Author)\x3c/b\x3e가 직접 산출물을 설명하며 진행' },
     { type:'bullet', html:'참여자들이 질문하고 의견 제시 — 교육·아이디어 공유 목적으로도 활용' },
     { type:'bullet', html:'진행자가 반드시 필요하지 않음' },
 
     { type:'h2', text:'2.3 기술 리뷰 (Technical Review)' },
-    { type:'bullet', html:'훈련된 <b>진행자(Facilitator)</b>가 주도' },
+    { type:'bullet', html:'훈련된 \x3cb\x3e진행자(Facilitator)\x3c/b\x3e가 주도' },
     { type:'bullet', html:'기술적 관점에서 결함, 개선점을 논의 — 작성자도 참여 가능' },
     { type:'bullet', html:'인스펙션보다는 덜 공식적' },
 
     { type:'h2', text:'2.4 인스펙션 (Inspection) [가장 공식적]' },
-    { type:'bullet', html:'<b>훈련된 진행자(Moderator)</b>가 체계적으로 주도' },
-    { type:'bullet', html:'<b>입구 기준 · 출구 기준</b> 적용, 체크리스트 사용, 결함 통계 수집' },
+    { type:'bullet', html:'\x3cb\x3e훈련된 진행자(Moderator)\x3c/b\x3e가 체계적으로 주도' },
+    { type:'bullet', html:'\x3cb\x3e입구 기준 · 출구 기준\x3c/b\x3e 적용, 체크리스트 사용, 결함 통계 수집' },
     { type:'bullet', html:'역할 구분 명확: 진행자, 작성자, 리뷰어, 서기 등' },
     { type:'bullet', html:'가장 공식적이며 결함 발견율이 가장 높음' },
     { type:'callout', title:'암기 포인트', text:'공식성 순서: 비공식 < 워크스루 < 기술 리뷰 < 인스펙션\n주도자: 워크스루=작성자 / 인스펙션=훈련된 진행자(Moderator)' },
@@ -939,7 +939,7 @@ var CONTENT = {
     },
 
     { type:'h1', num:'04', text:'정적 분석 (Static Analysis)' },
-    { type:'bullet', html:'도구(Tool)를 사용해 소프트웨어를 <b>실행하지 않고</b> 자동으로 코드를 분석' },
+    { type:'bullet', html:'도구(Tool)를 사용해 소프트웨어를 \x3cb\x3e실행하지 않고\x3c/b\x3e 자동으로 코드를 분석' },
     { type:'bullet', html:'검출 가능 항목: 코딩 표준 위반, 미사용 변수, 복잡도 초과, 보안 취약점 패턴' },
     { type:'bullet', html:'검출 불가 항목: 성능·사용성 등 실행이 필요한 품질 특성' },
     { type:'bullet', html:'예시 도구: SonarQube, PMD, ESLint, Checkstyle' },
@@ -959,8 +959,8 @@ var CONTENT = {
 
     { type:'h1', num:'02', text:'동등값 분할 (Equivalence Partitioning)  [자주 출제]' },
     { type:'h2', text:'2.1 개념' },
-    { type:'bullet', html:'입력 데이터를 <b>동일하게 처리되는 그룹(파티션)</b>으로 나눔' },
-    { type:'bullet', html:'각 파티션에서 <b>대표값 1개</b>만 테스트하면 충분하다고 가정' },
+    { type:'bullet', html:'입력 데이터를 \x3cb\x3e동일하게 처리되는 그룹(파티션)\x3c/b\x3e으로 나눔' },
+    { type:'bullet', html:'각 파티션에서 \x3cb\x3e대표값 1개\x3c/b\x3e만 테스트하면 충분하다고 가정' },
     { type:'bullet', html:'유효 파티션(Valid)과 무효 파티션(Invalid) 모두 식별해야 함' },
 
     { type:'h2', text:'2.2 테스트 케이스 수 계산' },
@@ -978,7 +978,7 @@ var CONTENT = {
 
     { type:'h1', num:'03', text:'경계값 분석 (Boundary Value Analysis)  [자주 출제]' },
     { type:'h2', text:'3.1 개념' },
-    { type:'bullet', html:'파티션의 <b>경계(boundary)</b>에 결함이 집중된다는 원리 기반' },
+    { type:'bullet', html:'파티션의 \x3cb\x3e경계(boundary)\x3c/b\x3e에 결함이 집중된다는 원리 기반' },
     { type:'bullet', html:'동등값 분할과 함께 사용 — 경계 근처 값을 추가 테스트' },
 
     { type:'h2', text:'3.2 2값 경계값 분석 vs 3값 경계값 분석' },
@@ -990,15 +990,15 @@ var CONTENT = {
       ]
     },
     { type:'bullet', html:'예시: 유효 범위 1~100 일 때' },
-    { type:'bullet', html:'2값 BVA: <b>1, 100</b> (경계값만)' },
-    { type:'bullet', html:'3값 BVA: <b>0, 1, 2</b> 와 <b>99, 100, 101</b>' },
+    { type:'bullet', html:'2값 BVA: \x3cb\x3e1, 100\x3c/b\x3e (경계값만)' },
+    { type:'bullet', html:'3값 BVA: \x3cb\x3e0, 1, 2\x3c/b\x3e 와 \x3cb\x3e99, 100, 101\x3c/b\x3e' },
     { type:'callout', title:'계산 공식', text:'2값 BVA: 경계 N개 × 2 = TC 수 / 3값 BVA: 경계 N개 × 3 = TC 수\n유효범위 1개(경계 2개) 기준 → 2값=4개, 3값=6개' },
 
     { type:'h1', num:'04', text:'결정 테이블 테스팅 (Decision Table Testing)' },
     { type:'h2', text:'4.1 개념' },
-    { type:'bullet', html:'<b>조건(Condition)과 행동(Action)</b>의 조합을 표로 정리' },
+    { type:'bullet', html:'\x3cb\x3e조건(Condition)과 행동(Action)\x3c/b\x3e의 조합을 표로 정리' },
     { type:'bullet', html:'복잡한 비즈니스 규칙, 여러 조건의 조합을 체계적으로 테스트할 때 유용' },
-    { type:'bullet', html:'조건 N개 → 최대 <b>2ⁿ</b>개의 규칙(열) 생성' },
+    { type:'bullet', html:'조건 N개 → 최대 \x3cb\x3e2ⁿ\x3c/b\x3e개의 규칙(열) 생성' },
 
     { type:'h2', text:'4.2 구조 예시 (할인 적용 규칙)' },
     { type:'table',
@@ -1011,6 +1011,7 @@ var CONTENT = {
     },
     { type:'callout', title:'공식', text:'조건 N개 → 최대 2ⁿ 규칙. 조건 2개=4규칙, 조건 3개=8규칙. 실제 시험에서 "최소 테스트 케이스 수" 계산 문제로 자주 출제!' },
   ]
+};
 
 var QUIZ = {
   1: [
@@ -1253,6 +1254,7 @@ var QUIZ = {
       ans:3, ex:'결정 테이블: 여러 조건의 조합과 그에 따른 행동을 체계적으로 표현합니다. 복잡한 할인 정책, 권한 규칙 등 다중 조건 비즈니스 로직에 가장 적합합니다.' },
   ]
 };
+
 
 /* ══════════════════════════════
    STATE
