@@ -108,6 +108,16 @@ body {
   padding: 5px 12px; border-radius: 20px;
   border: 1px solid var(--accent);
 }
+.topbar-review-btn {
+  font-size: 12px; font-weight: 700;
+  background: transparent; color: var(--text2);
+  padding: 5px 10px; border-radius: 20px;
+  border: 1px solid var(--border);
+  cursor: pointer; display: none; align-items: center; gap: 5px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.topbar-review-btn:hover { border-color: var(--accent); color: var(--accent); }
+.topbar-review-btn.visible { display: flex; }
 
 /* Hero */
 .hero {
@@ -477,6 +487,7 @@ body {
 <div id="mainScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">ISTQB FL</div>
+    <button class="topbar-review-btn" id="topbarReviewBtn" onclick="startReview()">&#x1F504; 복습하기</button>
     <div class="topbar-dday" id="ddayBadge">D-??</div>
   </div>
 
@@ -871,9 +882,11 @@ function renderMain() {
     reviewSectionTitle.style.display = 'block';
     reviewDesc.textContent = reviewableDays.length + '일차 완료 · 총 ' + totalReviewQ + '문제 랜덤 출제';
     reviewCard.classList.remove('disabled');
+    document.getElementById('topbarReviewBtn').classList.add('visible');
   } else {
     reviewSection.style.display = 'none';
     reviewSectionTitle.style.display = 'none';
+    document.getElementById('topbarReviewBtn').classList.remove('visible');
   }
 }
 
