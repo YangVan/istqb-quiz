@@ -487,7 +487,7 @@ body {
 <div id="mainScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">ISTQB FL</div>
-    <button class="topbar-review-btn" id="topbarReviewBtn" onclick="startReview()">&#x1F504; 복습하기</button>
+    <button class="topbar-review-btn" id="topbarReviewBtn" onclick="startReview(10)">&#x26A1; 복습하기</button>
     <div class="topbar-dday" id="ddayBadge">D-??</div>
   </div>
 
@@ -514,11 +514,19 @@ body {
 
   <div class="section-title" id="reviewSectionTitle" style="display:none">REVIEW</div>
   <div class="review-section" id="reviewSection" style="display:none">
-    <div class="review-card" id="reviewCard" onclick="startReview()">
-      <div class="review-icon">&#x1F504;</div>
+    <div class="review-card" id="reviewCard10" onclick="startReview(10)" style="margin-bottom:10px;">
+      <div class="review-icon">&#x26A1;</div>
       <div class="review-info">
-        <div class="review-title">전체 복습 퀴즈</div>
-        <div class="review-desc" id="reviewDesc">완료한 일차의 문제를 랜덤으로 출제해요</div>
+        <div class="review-title">빠른 복습  &nbsp;<span style="font-size:11px;font-weight:700;color:var(--accent);background:rgba(88,166,255,0.12);border:1px solid rgba(88,166,255,0.3);border-radius:20px;padding:2px 8px;">10문제</span></div>
+        <div class="review-desc">랜덤 10문제 · 빠르게 핵심만 체크</div>
+      </div>
+      <div class="review-arrow">&#8250;</div>
+    </div>
+    <div class="review-card" id="reviewCardAll" onclick="startReview(0)">
+      <div class="review-icon">&#x1F4DA;</div>
+      <div class="review-info">
+        <div class="review-title">전체 복습</div>
+        <div class="review-desc" id="reviewDesc">완료한 일차 전체 문제 랜덤 출제</div>
       </div>
       <div class="review-arrow">&#8250;</div>
     </div>
@@ -534,7 +542,7 @@ body {
     <div class="home-btn" onclick="goMain()" title="홈으로">&#8962;</div>
   </div>
   <div style="padding: 16px 20px 4px;">
-    <div style="font-size:15px; font-weight:800; color:var(--text);">전체 복습 퀴즈</div>
+    <div style="font-size:15px; font-weight:800; color:var(--text);" id="reviewScreenTitle">복습 퀴즈</div>
     <div class="review-badge" id="reviewBadge"></div>
   </div>
   <div class="quiz-content" id="reviewContent"></div>
@@ -545,7 +553,7 @@ body {
     <div class="result-pct"   id="reviewResultPct"></div>
     <div class="result-msg"   id="reviewResultMsg"></div>
     <div class="result-btns">
-      <button class="result-btn btn-retry"  onclick="startReview()">다시 풀기</button>
+      <button class="result-btn btn-retry"  id="reviewRetryBtn" onclick="retryReview()">다시 풀기</button>
       <button class="result-btn btn-finish" onclick="goMain()">홈으로</button>
     </div>
   </div>
@@ -874,14 +882,12 @@ function renderMain() {
   var totalReviewQ = reviewableDays.reduce(function(acc, d){ return acc + QUIZ[d].length; }, 0);
   var reviewSection = document.getElementById('reviewSection');
   var reviewSectionTitle = document.getElementById('reviewSectionTitle');
-  var reviewCard = document.getElementById('reviewCard');
   var reviewDesc = document.getElementById('reviewDesc');
 
   if (reviewableDays.length > 0) {
     reviewSection.style.display = 'block';
     reviewSectionTitle.style.display = 'block';
-    reviewDesc.textContent = reviewableDays.length + '일차 완료 · 총 ' + totalReviewQ + '문제 랜덤 출제';
-    reviewCard.classList.remove('disabled');
+    reviewDesc.textContent = reviewableDays.length + '일차 완료 · 총 ' + totalReviewQ + '문제';
     document.getElementById('topbarReviewBtn').classList.add('visible');
   } else {
     reviewSection.style.display = 'none';
@@ -1031,8 +1037,11 @@ function goMain() {
 ══════════════════════════════ */
 var reviewQuestions = [];
 var reviewAnswered = 0, reviewCorrect = 0;
+var reviewLimit = 0; // 0 = 전체, 10 = 10문제
 
-function startReview() {
+function startReview(limit) {
+  reviewLimit = (limit === undefined) ? 0 : limit;
+
   // 완료한 일차의 모든 문제 수집 후 셔플
   var allQ = [];
   state.completed.forEach(function(d) {
@@ -1047,18 +1056,27 @@ function startReview() {
     var j = Math.floor(Math.random() * (i + 1));
     var tmp = allQ[i]; allQ[i] = allQ[j]; allQ[j] = tmp;
   }
+  // 10문제 모드면 앞에서 10개만
+  if (reviewLimit > 0) allQ = allQ.slice(0, reviewLimit);
   reviewQuestions = allQ;
   reviewAnswered = 0; reviewCorrect = 0;
 
-  // 배지 업데이트
+  // 타이틀 & 배지
   var days = state.completed.filter(function(d){ return !!QUIZ[d]; });
+  var isShort = reviewLimit > 0;
+  document.getElementById('reviewScreenTitle').textContent = isShort ? '빠른 복습 (10문제)' : '전체 복습';
   document.getElementById('reviewBadge').textContent =
-    days.map(function(d){ return d + '일차'; }).join(' · ') + ' · 총 ' + allQ.length + '문제';
+    days.map(function(d){ return d + '일차'; }).join(' · ') +
+    (isShort ? ' · 랜덤 10문제' : ' · 전체 ' + allQ.length + '문제');
 
   document.getElementById('reviewResult').style.display = 'none';
   renderReview();
   showScreen('reviewScreen');
   updateReviewProgress();
+}
+
+function retryReview() {
+  startReview(reviewLimit);
 }
 
 function renderReview() {
