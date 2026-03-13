@@ -68,6 +68,14 @@ body {
 .setup-card h1 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
 .setup-card p  { font-size: 14px; color: var(--text2); margin-bottom: 28px; line-height: 1.6; }
 .setup-label { font-size: 12px; font-weight: 700; color: var(--text2); text-align: left; margin-bottom: 8px; letter-spacing: 0.5px; }
+.text-input {
+  width: 100%; padding: 14px 16px;
+  background: var(--bg3); border: 1.5px solid var(--border);
+  border-radius: 12px; color: var(--text);
+  font-family: inherit; font-size: 15px;
+  outline: none; margin-bottom: 20px;
+}
+.text-input:focus { border-color: var(--accent); }
 .date-input {
   width: 100%; padding: 14px 16px;
   background: var(--bg3); border: 1.5px solid var(--border);
@@ -85,6 +93,38 @@ body {
   transition: opacity 0.15s;
 }
 .start-btn:hover { opacity: 0.88; }
+
+/* 프로필 선택 */
+.profile-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.profile-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 16px; border-radius: 12px;
+  background: var(--bg3); border: 1.5px solid var(--border);
+  cursor: pointer; transition: border-color 0.12s;
+}
+.profile-item:hover { border-color: var(--accent); }
+.profile-item-left { display: flex; align-items: center; gap: 12px; }
+.profile-avatar {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--navy); display: flex; align-items: center;
+  justify-content: center; font-size: 16px; flex-shrink: 0;
+}
+.profile-name  { font-size: 14px; font-weight: 700; color: var(--text); }
+.profile-meta  { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.profile-arrow { color: var(--accent); font-size: 18px; }
+.profile-del {
+  background: none; border: none; color: var(--text3);
+  font-size: 16px; cursor: pointer; padding: 4px 6px;
+  border-radius: 6px; transition: color 0.12s;
+}
+.profile-del:hover { color: var(--red); }
+.divider {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 20px; color: var(--text3); font-size: 12px;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
 
 /* ══════════════════════════════
    MAIN SCREEN
@@ -454,7 +494,23 @@ body {
   margin-top: 6px;
 }
 
-.hidden { display: none !important; }
+/* PIN 입력 */
+.pin-wrap { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+.pin-box {
+  width: 52px; height: 58px; border-radius: 12px;
+  background: var(--bg3); border: 1.5px solid var(--border);
+  color: var(--text); font-size: 24px; font-weight: 800;
+  text-align: center; font-family: inherit; outline: none;
+  caret-color: transparent;
+}
+.pin-box:focus { border-color: var(--accent); background: var(--lblue); }
+.pin-box.filled { border-color: var(--accent); }
+.pin-box.error  { border-color: var(--red); animation: shake 0.3s; }
+@keyframes shake {
+  0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}
+}
+.setup-toggle { font-size: 13px; color: var(--text2); text-align: center; margin-top: 12px; }
+.setup-toggle a { color: var(--accent); cursor: pointer; font-weight: 700; text-decoration: none; }
 
 /* Toast */
 .toast {
@@ -476,10 +532,50 @@ body {
   <div class="setup-card">
     <div class="setup-logo">&#x1F4DA;</div>
     <h1>ISTQB FL Study</h1>
-    <p>시험일을 입력하면<br>남은 기간에 맞게 학습 일정을 자동으로 만들어드려요.</p>
-    <div class="setup-label">시험 예정일</div>
-    <input type="date" class="date-input" id="examDate">
-    <button class="start-btn" onclick="startStudy()">학습 시작하기</button>
+
+    <!-- 프로필 선택 목록 -->
+    <div id="profileListWrap" style="display:none">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6;">
+        프로필을 선택하고 PIN을 입력하세요.
+      </p>
+      <div class="profile-list" id="profileList"></div>
+      <div class="divider">처음 오셨나요?</div>
+      <button class="start-btn" style="background:var(--bg3);color:var(--accent);border:1.5px solid var(--accent);" onclick="showRegister()">새 프로필 만들기</button>
+    </div>
+
+    <!-- 로그인 (PIN 입력) -->
+    <div id="loginWrap" style="display:none">
+      <p id="loginDesc" style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px;"></p>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:20px;">4자리 PIN을 입력하세요</p>
+      <div class="pin-wrap">
+        <input class="pin-box" id="pin0" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]">
+        <input class="pin-box" id="pin1" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]">
+        <input class="pin-box" id="pin2" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]">
+        <input class="pin-box" id="pin3" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]">
+      </div>
+      <p id="loginError" style="font-size:13px;color:var(--red);text-align:center;margin-bottom:12px;display:none;">PIN이 틀렸어요. 다시 시도해 주세요.</p>
+      <div class="setup-toggle"><a onclick="backToProfiles()">← 다른 프로필 선택</a></div>
+    </div>
+
+    <!-- 회원가입 -->
+    <div id="registerWrap" style="display:none">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6;">
+        닉네임과 PIN을 설정하고<br>학습을 시작하세요.
+      </p>
+      <div class="setup-label">닉네임</div>
+      <input type="text" class="text-input" id="nicknameInput" placeholder="예) 수험생A" maxlength="12">
+      <div class="setup-label">4자리 PIN 설정</div>
+      <div class="pin-wrap">
+        <input class="pin-box" id="rpin0" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]">
+        <input class="pin-box" id="rpin1" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]">
+        <input class="pin-box" id="rpin2" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]">
+        <input class="pin-box" id="rpin3" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]">
+      </div>
+      <div class="setup-label">시험 예정일</div>
+      <input type="date" class="date-input" id="examDate">
+      <button class="start-btn" onclick="startStudy()">학습 시작하기</button>
+      <div class="setup-toggle" id="backToListToggle" style="display:none"><a onclick="backToProfiles()">← 기존 프로필로 돌아가기</a></div>
+    </div>
   </div>
 </div>
 
@@ -487,7 +583,10 @@ body {
 <div id="mainScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">ISTQB FL</div>
-    <div class="topbar-dday" id="ddayBadge">D-??</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div id="topbarNickname" style="font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;padding:4px 8px;border-radius:8px;border:1px solid var(--border);" onclick="switchProfile()" title="프로필 전환"></div>
+      <div class="topbar-dday" id="ddayBadge">D-??</div>
+    </div>
   </div>
 
   <div class="hero">
@@ -1034,8 +1133,9 @@ var QUIZ = {
    STATE
 ══════════════════════════════ */
 var state = {
+  nickname: '',
   examDate: null,
-  completed: [],   // 완료한 day 번호들
+  completed: [],
   streak: 0,
 };
 var currentDay = 1;
@@ -1043,47 +1143,230 @@ var quizAnswered = 0, quizCorrect = 0;
 var LTRS = ['A','B','C','D'];
 
 /* ══════════════════════════════
-   INIT
+   INIT & AUTH
 ══════════════════════════════ */
-window.onload = function() {
-  var saved = localStorage.getItem('istqb_state');
-  if (saved) {
-    try { state = JSON.parse(saved); } catch(e) {}
-  }
-  var today = new Date();
-  today.setHours(0,0,0,0);
+var PROFILES_KEY = 'istqb_profiles';
+var CURRENT_KEY  = 'istqb_current';
+var loginTarget  = null; // 로그인 시도 중인 닉네임
 
-  if (state.examDate) {
-    var exam = new Date(state.examDate);
-    exam.setHours(0,0,0,0);
-    var diff = Math.ceil((exam - today) / 86400000);
-    if (diff <= 0) { showScreen('examScreen'); return; }
+function loadProfiles() {
+  try { return JSON.parse(localStorage.getItem(PROFILES_KEY)) || {}; } catch(e) { return {}; }
+}
+function saveProfiles(p) { localStorage.setItem(PROFILES_KEY, JSON.stringify(p)); }
+
+function hashPin(pin) {
+  // 단순 해시 (localStorage는 클라이언트 측이므로 간단 난독화)
+  var h = 0;
+  for (var i = 0; i < pin.length; i++) h = (Math.imul(31, h) + pin.charCodeAt(i)) | 0;
+  return h.toString(36);
+}
+
+function save() {
+  var profiles = loadProfiles();
+  profiles[state.nickname] = state;
+  saveProfiles(profiles);
+  localStorage.setItem(CURRENT_KEY, state.nickname);
+}
+
+function switchProfile() {
+  localStorage.removeItem(CURRENT_KEY);
+  renderSetup();
+  showScreen('setupScreen');
+}
+
+window.onload = function() {
+  var currentNick = localStorage.getItem(CURRENT_KEY);
+  var profiles = loadProfiles();
+  if (currentNick && profiles[currentNick]) {
+    state = profiles[currentNick];
+    var today = new Date(); today.setHours(0,0,0,0);
+    var exam  = new Date(state.examDate); exam.setHours(0,0,0,0);
+    if (Math.ceil((exam - today) / 86400000) <= 0) { showScreen('examScreen'); return; }
     showScreen('mainScreen');
     renderMain();
   } else {
-    var defDate = new Date(today);
-    defDate.setDate(defDate.getDate() + 36);
-    document.getElementById('examDate').value = defDate.toISOString().split('T')[0];
+    renderSetup();
     showScreen('setupScreen');
   }
 };
 
-function save() {
-  localStorage.setItem('istqb_state', JSON.stringify(state));
+/* ── Setup 화면 렌더 ── */
+function renderSetup() {
+  var profiles = loadProfiles();
+  var nicks = Object.keys(profiles);
+  document.getElementById('profileListWrap').style.display = 'none';
+  document.getElementById('loginWrap').style.display       = 'none';
+  document.getElementById('registerWrap').style.display    = 'none';
+  clearPins('pin'); clearPins('rpin');
+
+  if (nicks.length > 0) {
+    document.getElementById('profileListWrap').style.display = 'block';
+    var list = document.getElementById('profileList');
+    list.innerHTML = '';
+    nicks.forEach(function(nick) {
+      var p = profiles[nick];
+      var done = (p.completed || []).length;
+      var exam = p.examDate ? new Date(p.examDate) : null;
+      var today = new Date(); today.setHours(0,0,0,0);
+      var dday = exam ? Math.ceil((exam - today) / 86400000) : '?';
+      var ddayTxt = typeof dday === 'number' && dday > 0 ? 'D-' + dday : 'D-DAY';
+
+      var item = document.createElement('div');
+      item.className = 'profile-item';
+
+      var left = document.createElement('div');
+      left.className = 'profile-item-left';
+      left.style.flex = '1';
+      left.onclick = function() { showLogin(nick); };
+
+      var avatar = document.createElement('div');
+      avatar.className = 'profile-avatar';
+      avatar.textContent = nick[0].toUpperCase();
+
+      var info = document.createElement('div');
+      info.innerHTML = '<div class="profile-name">' + nick + '</div>' +
+        '<div class="profile-meta">' + done + '일차 완료 · ' + ddayTxt + '</div>';
+
+      left.appendChild(avatar); left.appendChild(info);
+
+      var right = document.createElement('div');
+      right.style.cssText = 'display:flex;align-items:center;gap:6px;';
+
+      var arrow = document.createElement('div');
+      arrow.className = 'profile-arrow'; arrow.textContent = '›';
+      arrow.onclick = function() { showLogin(nick); };
+
+      var del = document.createElement('button');
+      del.className = 'profile-del'; del.textContent = '✕'; del.title = '프로필 삭제';
+      del.onclick = function(e) {
+        e.stopPropagation();
+        if (confirm(nick + ' 프로필을 삭제할까요?\n학습 진행도가 모두 사라져요.')) {
+          var pf = loadProfiles(); delete pf[nick]; saveProfiles(pf);
+          if (localStorage.getItem(CURRENT_KEY) === nick) localStorage.removeItem(CURRENT_KEY);
+          renderSetup();
+        }
+      };
+      right.appendChild(arrow); right.appendChild(del);
+      item.appendChild(left); item.appendChild(right);
+      list.appendChild(item);
+    });
+  } else {
+    showRegister();
+  }
 }
 
-/* ══════════════════════════════
-   SETUP
-══════════════════════════════ */
+/* ── 로그인 화면 ── */
+function showLogin(nick) {
+  loginTarget = nick;
+  document.getElementById('profileListWrap').style.display = 'none';
+  document.getElementById('registerWrap').style.display    = 'none';
+  document.getElementById('loginWrap').style.display       = 'block';
+  document.getElementById('loginDesc').textContent         = nick;
+  document.getElementById('loginError').style.display      = 'none';
+  clearPins('pin');
+  initPinInputs('pin', function(pin) { verifyLogin(pin); });
+  document.getElementById('pin0').focus();
+}
+
+/* ── 회원가입 화면 ── */
+function showRegister() {
+  document.getElementById('profileListWrap').style.display = 'none';
+  document.getElementById('loginWrap').style.display       = 'none';
+  document.getElementById('registerWrap').style.display    = 'block';
+  var profiles = loadProfiles();
+  var hasPrev = Object.keys(profiles).length > 0;
+  document.getElementById('backToListToggle').style.display = hasPrev ? 'block' : 'none';
+  clearPins('rpin');
+  initPinInputs('rpin', null);
+  var defDate = new Date(); defDate.setDate(defDate.getDate() + 36);
+  document.getElementById('examDate').value = defDate.toISOString().split('T')[0];
+}
+
+function backToProfiles() { loginTarget = null; renderSetup(); }
+
+/* ── PIN 입력 공통 유틸 ── */
+function clearPins(prefix) {
+  for (var i = 0; i < 4; i++) {
+    var el = document.getElementById(prefix + i);
+    if (el) { el.value = ''; el.classList.remove('filled','error'); }
+  }
+}
+
+function initPinInputs(prefix, onComplete) {
+  for (var i = 0; i < 4; i++) {
+    (function(idx) {
+      var el = document.getElementById(prefix + idx);
+      el.oninput = function() {
+        // 숫자만 허용
+        this.value = this.value.replace(/[^0-9]/g, '').slice(-1);
+        if (this.value) {
+          this.classList.add('filled');
+          if (idx < 3) document.getElementById(prefix + (idx+1)).focus();
+          else if (onComplete) {
+            var pin = '';
+            for (var k = 0; k < 4; k++) pin += document.getElementById(prefix + k).value;
+            if (pin.length === 4) setTimeout(function(){ onComplete(pin); }, 80);
+          }
+        } else {
+          this.classList.remove('filled');
+        }
+      };
+      el.onkeydown = function(e) {
+        if (e.key === 'Backspace' && !this.value && idx > 0) {
+          document.getElementById(prefix + (idx-1)).focus();
+        }
+      };
+    })(i);
+  }
+}
+
+/* ── 로그인 검증 ── */
+function verifyLogin(pin) {
+  var profiles = loadProfiles();
+  var p = profiles[loginTarget];
+  if (!p) return;
+  if (p.pin === hashPin(pin)) {
+    state = p;
+    localStorage.setItem(CURRENT_KEY, loginTarget);
+    var today = new Date(); today.setHours(0,0,0,0);
+    var exam  = new Date(state.examDate); exam.setHours(0,0,0,0);
+    if (Math.ceil((exam - today) / 86400000) <= 0) { showScreen('examScreen'); return; }
+    showScreen('mainScreen');
+    renderMain();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    for (var i = 0; i < 4; i++) {
+      var el = document.getElementById('pin' + i);
+      el.classList.add('error');
+    }
+    setTimeout(function() {
+      clearPins('pin');
+      document.getElementById('loginError').style.display = 'none';
+      initPinInputs('pin', function(pin2){ verifyLogin(pin2); });
+      document.getElementById('pin0').focus();
+    }, 800);
+  }
+}
+
+/* ── 회원가입 ── */
 function startStudy() {
+  var nick = (document.getElementById('nicknameInput').value || '').trim();
+  if (!nick) return alert('닉네임을 입력해 주세요!');
+
+  var pin = '';
+  for (var i = 0; i < 4; i++) pin += (document.getElementById('rpin' + i).value || '');
+  if (pin.length < 4) return alert('4자리 PIN을 모두 입력해 주세요!');
+
+  var profiles = loadProfiles();
+  if (profiles[nick]) return alert('이미 사용 중인 닉네임이에요.\n다른 닉네임을 입력해 주세요!');
+
   var val = document.getElementById('examDate').value;
   if (!val) return alert('시험일을 선택해 주세요!');
   var exam = new Date(val);
   var today = new Date(); today.setHours(0,0,0,0);
   if (exam <= today) return alert('시험일은 오늘 이후여야 해요!');
-  state.examDate = val;
-  state.completed = [];
-  state.streak = 0;
+
+  state = { nickname: nick, pin: hashPin(pin), examDate: val, completed: [], streak: 0 };
   save();
   showScreen('mainScreen');
   renderMain();
@@ -1098,9 +1381,13 @@ function renderMain() {
   var diff  = Math.ceil((exam - today) / 86400000);
 
   document.getElementById('ddayBadge').textContent = diff > 0 ? 'D-' + diff : 'D-DAY';
+  var nb = document.getElementById('topbarNickname');
+  nb.textContent = (state.nickname || '') + ' ›';
+  nb.title = '프로필 전환';
 
-  var hour = today.getHours();
-  var greet = hour < 12 ? '좋은 아침이에요!' : hour < 18 ? '오늘도 화이팅!' : '오늘 학습 잊지 마세요!';
+  var hour = new Date().getHours();
+  var greet = (state.nickname ? state.nickname + ', ' : '') +
+    (hour < 12 ? '좋은 아침이에요!' : hour < 18 ? '오늘도 화이팅!' : '오늘 학습 잊지 마세요!');
   document.getElementById('heroGreet').textContent = greet;
 
   var done = state.completed.length;
