@@ -617,7 +617,7 @@ var CURRICULUM = [
   { day:1,  title:'소프트웨어 테스팅의 기초',      chapter:'Chapter 1',  available: true },
   { day:2,  title:'소프트웨어 개발 수명주기',       chapter:'Chapter 2',  available: true },
   { day:3,  title:'테스트 레벨과 유형',             chapter:'Chapter 2',  available: true },
-  { day:4,  title:'정적 테스팅',                   chapter:'Chapter 3',  available: false },
+  { day:4,  title:'정적 테스팅',                   chapter:'Chapter 3',  available: true },
   { day:5,  title:'테스트 기법 기초',               chapter:'Chapter 4',  available: false },
   { day:6,  title:'블랙박스 테스트 기법',           chapter:'Chapter 4',  available: false },
   { day:7,  title:'화이트박스 & 경험 기반 기법',    chapter:'Chapter 4',  available: false },
@@ -771,6 +771,62 @@ var CONTENT = {
     { type:'bullet', html:'변경이 기존 시스템에 미치는 영향 범위를 식별하는 활동' },
     { type:'bullet', html:'리그레션 테스팅의 <b>범위를 결정</b>하는 데 핵심적으로 활용' },
     { type:'callout', title:'순서', text:'영향도 분석 → 리그레션 테스팅 범위 결정 → 유지보수 테스팅 수행' },
+  ],
+  4: [
+    { type:'h1', num:'01', text:'정적 테스팅이란? (Static Testing)' },
+    { type:'h2', text:'1.1 정적 테스팅 vs 동적 테스팅' },
+    { type:'table',
+      headers: ['구분', '정적 테스팅', '동적 테스팅'],
+      rows: [
+        ['실행 여부', '소프트웨어를 실행하지 않음', '소프트웨어를 실행하여 수행'],
+        ['대상', '코드, 요구사항, 설계 문서, 테스트 케이스', '실행 가능한 소프트웨어'],
+        ['기법', '리뷰, 인스펙션, 정적 분석', '블랙박스, 화이트박스, 경험 기반'],
+        ['발견 결함', '논리 오류, 표준 위반, 불명확한 요구사항', '런타임 결함, 성능 문제'],
+      ]
+    },
+    { type:'callout', title:'핵심', text:'정적 테스팅은 소프트웨어를 실행하지 않고 수행한다. 조기 발견으로 수정 비용을 크게 절감할 수 있다.' },
+
+    { type:'h1', num:'02', text:'리뷰 유형 4가지 [자주 출제]' },
+    { type:'h2', text:'2.1 비공식 리뷰 (Informal Review)' },
+    { type:'bullet', html:'가장 덜 공식적인 리뷰 — 별도 프로세스·문서 없음' },
+    { type:'bullet', html:'동료 검토, 코드 리뷰 등이 해당' },
+    { type:'bullet', html:'비용이 낮고 빠르나, 체계적 결함 추적이 어려움' },
+
+    { type:'h2', text:'2.2 워크스루 (Walkthrough)' },
+    { type:'bullet', html:'<b>작성자(Author)</b>가 직접 산출물을 설명하며 진행' },
+    { type:'bullet', html:'참여자들이 질문하고 의견 제시 — 교육·아이디어 공유 목적으로도 활용' },
+    { type:'bullet', html:'진행자가 반드시 필요하지 않음' },
+
+    { type:'h2', text:'2.3 기술 리뷰 (Technical Review)' },
+    { type:'bullet', html:'훈련된 <b>진행자(Facilitator)</b>가 주도' },
+    { type:'bullet', html:'기술적 관점에서 결함, 개선점을 논의 — 작성자도 참여 가능' },
+    { type:'bullet', html:'인스펙션보다는 덜 공식적' },
+
+    { type:'h2', text:'2.4 인스펙션 (Inspection) [가장 공식적]' },
+    { type:'bullet', html:'<b>훈련된 진행자(Moderator)</b>가 체계적으로 주도' },
+    { type:'bullet', html:'<b>입구 기준 · 출구 기준</b> 적용, 체크리스트 사용, 결함 통계 수집' },
+    { type:'bullet', html:'역할 구분 명확: 진행자, 작성자, 리뷰어, 서기 등' },
+    { type:'bullet', html:'가장 공식적이며 결함 발견율이 가장 높음' },
+    { type:'callout', title:'암기 포인트', text:'공식성 순서: 비공식 < 워크스루 < 기술 리뷰 < 인스펙션\n주도자: 워크스루=작성자 / 인스펙션=훈련된 진행자(Moderator)' },
+
+    { type:'h1', num:'03', text:'리뷰 프로세스 순서 [자주 출제]' },
+    { type:'table',
+      headers: ['단계', '주요 활동'],
+      rows: [
+        ['1. 계획 (Planning)', '리뷰 범위·목적 정의, 참여자 선정, 일정 수립'],
+        ['2. 개시 (Initiation)', '산출물 배포, 입구 기준 확인, 목표·프로세스 설명'],
+        ['3. 개별 검토 (Individual Review)', '각 참여자가 독립적으로 산출물 검토·이슈 기록'],
+        ['4. 검토 회의 (Review Meeting)', '이슈 논의, 결함 여부 판정, 담당자 배정'],
+        ['5. 수정 및 후속조치 (Rework & Follow-up)', '결함 수정, 출구 기준 확인, 리뷰 완료'],
+      ]
+    },
+
+    { type:'h1', num:'04', text:'정적 분석 (Static Analysis)' },
+    { type:'bullet', html:'도구(Tool)를 사용해 소프트웨어를 <b>실행하지 않고</b> 자동으로 코드를 분석' },
+    { type:'bullet', html:'검출 가능 항목: 코딩 표준 위반, 미사용 변수, 복잡도 초과, 보안 취약점 패턴' },
+    { type:'bullet', html:'검출 불가 항목: 성능·사용성 등 실행이 필요한 품질 특성' },
+    { type:'bullet', html:'예시 도구: SonarQube, PMD, ESLint, Checkstyle' },
+    { type:'callout', title:'핵심 구분', text:'정적 분석 = 도구 자동화 / 리뷰 = 사람이 직접 검토. 둘 다 소프트웨어를 실행하지 않는다.' },
   ]
 };
 
