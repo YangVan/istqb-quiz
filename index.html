@@ -23,8 +23,8 @@
   --lorange:  #2D1F0D;
   --yellow:   #E3B341;
   --text:     #E6EDF3;
-  --text2:    #8B949E;
-  --text3:    #6E7681;
+  --text2:    #A8B3BE;
+  --text3:    #8B949E;
   --white:    #FFFFFF;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -168,7 +168,7 @@ body {
 .day-icon.lock   { background: var(--bg3); }
 
 .day-info { flex: 1; }
-.day-label { font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 0.5px; margin-bottom: 3px; }
+.day-label { font-size: 11px; font-weight: 700; color: var(--text2); letter-spacing: 0.5px; margin-bottom: 3px; }
 .day-title { font-size: 14px; font-weight: 700; color: var(--text); }
 .day-chapter { font-size: 11px; color: var(--text2); margin-top: 2px; }
 
@@ -240,7 +240,7 @@ body {
   margin-bottom: 8px;
 }
 .content-bullet {
-  font-size: 14px; color: var(--text2); line-height: 1.75;
+  font-size: 14px; color: var(--text); line-height: 1.75;
   margin-bottom: 8px; padding-left: 16px;
   position: relative; word-break: keep-all; word-wrap: break-word;
 }
@@ -264,8 +264,8 @@ body {
   background: var(--navy); color: var(--white);
   padding: 10px 12px; text-align: left; font-weight: 700;
 }
-.content-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text2); }
-.content-table tr:nth-child(even) td { background: var(--bg3); }
+.content-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+.content-table tr:nth-child(even) td { background: var(--bg3); color: var(--text); }
 .content-table td b { color: var(--text); }
 
 /* Principle cards */
@@ -275,7 +275,7 @@ body {
 }
 .principle-num { font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 4px; letter-spacing: 0.5px; }
 .principle-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
-.principle-desc { font-size: 13px; color: var(--text2); line-height: 1.55; }
+.principle-desc { font-size: 13px; color: var(--text); line-height: 1.55; }
 .principle-desc b { color: var(--orange); }
 
 /* Complete button */
@@ -337,7 +337,7 @@ body {
   display: flex; align-items: flex-start; gap: 10px;
   padding: 12px 14px; border-radius: 10px;
   border: 1.5px solid var(--border);
-  background: var(--bg3); color: var(--text2);
+  background: var(--bg3); color: var(--text);
   font-size: 13px; line-height: 1.45; cursor: pointer;
   transition: border-color 0.12s, background 0.12s;
 }
@@ -349,7 +349,7 @@ body {
   width: 25px; height: 25px; min-width: 25px; border-radius: 7px;
   background: var(--bg2); border: 1.5px solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; color: var(--text3); margin-top: 1px;
+  font-size: 11px; font-weight: 700; color: var(--text2); margin-top: 1px;
 }
 .quiz-opt.correct .opt-ltr { background: var(--green); border-color: var(--green); color: #fff; }
 .quiz-opt.wrong   .opt-ltr { background: var(--red);   border-color: var(--red);   color: #fff; }
@@ -358,8 +358,8 @@ body {
   margin: 0 16px 14px; padding: 12px 14px;
   border-radius: 10px; font-size: 13px; line-height: 1.6; display: none;
 }
-.quiz-fb.sc { display: block; background: var(--lgreen); color: var(--green); border: 1px solid var(--green); }
-.quiz-fb.sw { display: block; background: var(--lred);   color: var(--red);   border: 1px solid var(--red); }
+.quiz-fb.sc { display: block; background: var(--lgreen); color: #4CC96A; border: 1px solid var(--green); }
+.quiz-fb.sw { display: block; background: var(--lred);   color: #FF6B63; border: 1px solid var(--red); }
 .quiz-fb strong { display: block; margin-bottom: 3px; }
 
 /* Result */
@@ -369,7 +369,7 @@ body {
   padding: 36px 24px; text-align: center; display: none;
 }
 .result-score { font-size: 56px; font-weight: 900; color: var(--accent); line-height: 1; margin: 12px 0 4px; }
-.result-pct   { font-size: 14px; color: var(--text2); margin-bottom: 12px; }
+.result-pct   { font-size: 14px; color: var(--text); margin-bottom: 12px; }
 .result-msg   { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 20px; line-height: 1.5; }
 .result-btns  { display: flex; gap: 10px; }
 .result-btn {
@@ -404,6 +404,18 @@ body {
    UTILITIES
 ══════════════════════════════ */
 .hidden { display: none !important; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); font-size: 13px; font-weight: 600;
+  padding: 12px 20px; border-radius: 30px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 999; white-space: nowrap;
+}
+.toast.show { opacity: 1; }
 </style>
 </head>
 <body>
@@ -488,6 +500,8 @@ body {
     </div>
   </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <!-- ── EXAM DAY SCREEN ── -->
 <div id="examScreen" class="screen">
@@ -769,18 +783,26 @@ function renderMain() {
 function makeDayCard(cur) {
   var done      = state.completed.indexOf(cur.day) !== -1;
   var available = cur.available;
+  var hasContent = !!CONTENT[cur.day];
+
+  // available이어도 콘텐츠 없으면 잠금 처리
+  var isReady = available && hasContent;
+
   var card = document.createElement('div');
-  card.className = 'day-card ' + (done ? 'completed' : available ? 'unlocked' : 'locked');
+  card.className = 'day-card ' + (done ? 'completed' : isReady ? 'unlocked' : 'locked');
 
   var head = document.createElement('div');
   head.className = 'day-card-head';
-  if ((available || done) && !(!available && !done)) {
+  if (done || isReady) {
     head.onclick = function() { openDay(cur.day); };
+  } else {
+    head.onclick = function() { showComingSoon(cur.day); };
+    head.style.cursor = 'default';
   }
 
   var icon = document.createElement('div');
-  icon.className = 'day-icon ' + (done ? 'done' : available ? 'active' : 'lock');
-  icon.textContent = done ? '\u2713' : available ? '\u{1F4D6}' : '\uD83D\uDD12';
+  icon.className = 'day-icon ' + (done ? 'done' : isReady ? 'active' : 'lock');
+  icon.textContent = done ? '\u2713' : isReady ? '\u{1F4D6}' : '\uD83D\uDD12';
 
   var info = document.createElement('div');
   info.className = 'day-info';
@@ -795,8 +817,8 @@ function makeDayCard(cur) {
   info.appendChild(title);
 
   var badge = document.createElement('div');
-  badge.className = 'day-badge ' + (done ? 'badge-done' : available ? 'badge-active' : 'badge-lock');
-  badge.textContent = done ? '완료' : available ? '학습하기' : '잠금';
+  badge.className = 'day-badge ' + (done ? 'badge-done' : isReady ? 'badge-active' : 'badge-lock');
+  badge.textContent = done ? '완료' : isReady ? '학습하기' : '준비 중';
 
   head.appendChild(icon);
   head.appendChild(info);
@@ -892,6 +914,19 @@ function completeStudy() {
 function goMain() {
   showScreen('mainScreen');
   renderMain();
+}
+
+var toastTimer = null;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+
+function showComingSoon(day) {
+  showToast('🔒 ' + day + '일차는 아직 준비 중이에요. 내일 업데이트 예정!');
 }
 
 /* ══════════════════════════════
@@ -1000,9 +1035,9 @@ function finishDay() {
   if (state.completed.indexOf(currentDay) === -1) {
     state.completed.push(currentDay);
     state.streak = (state.streak || 0) + 1;
-    // 다음 일차 unlock
+    // 다음 일차가 콘텐츠가 있을 때만 unlock
     var next = CURRICULUM.find(function(c){ return c.day === currentDay + 1; });
-    if (next) next.available = true;
+    if (next && CONTENT[currentDay + 1]) next.available = true;
     save();
   }
   goMain();
