@@ -1089,6 +1089,15 @@ function makeReviewCard(q, i, day, total) {
   var card = document.createElement('div');
   card.className = 'quiz-card';
 
+  // 보기 셔플 - 정답 인덱스 추적
+  var indices = [0, 1, 2, 3];
+  for (var s = indices.length - 1; s > 0; s--) {
+    var r = Math.floor(Math.random() * (s + 1));
+    var t = indices[s]; indices[s] = indices[r]; indices[r] = t;
+  }
+  var shuffledOpts = indices.map(function(idx){ return q.opts[idx]; });
+  var newAns = indices.indexOf(q.ans); // 셔플 후 정답의 새 위치
+
   // 일차 태그
   var head = document.createElement('div');
   head.className = 'quiz-card-head';
@@ -1113,14 +1122,14 @@ function makeReviewCard(q, i, day, total) {
 
   var opts = document.createElement('div');
   opts.className = 'quiz-opts';
-  q.opts.forEach(function(o, oi) {
+  shuffledOpts.forEach(function(o, oi) {
     var btn = document.createElement('div');
     btn.className = 'quiz-opt';
     var ltr = document.createElement('div');
     ltr.className = 'opt-ltr'; ltr.textContent = LTRS[oi];
     var sp = document.createElement('span'); sp.textContent = o;
     btn.appendChild(ltr); btn.appendChild(sp);
-    btn.addEventListener('click', function() { chooseReviewOpt(i, oi, opts, q, total); });
+    btn.addEventListener('click', function() { chooseReviewOpt(i, oi, opts, newAns, q.ex, total); });
     opts.appendChild(btn);
   });
   card.appendChild(opts);
@@ -1131,16 +1140,16 @@ function makeReviewCard(q, i, day, total) {
   return card;
 }
 
-function chooseReviewOpt(qi, oi, optsEl, q, total) {
+function chooseReviewOpt(qi, oi, optsEl, ans, ex, total) {
   var btns = optsEl.querySelectorAll('.quiz-opt');
   if (btns[0].classList.contains('disabled')) return;
   for (var k = 0; k < btns.length; k++) btns[k].classList.add('disabled');
-  var isC = oi === q.ans;
+  var isC = oi === ans;
   btns[oi].classList.add(isC ? 'correct' : 'wrong');
-  if (!isC) btns[q.ans].classList.add('correct');
+  if (!isC) btns[ans].classList.add('correct');
   var fb = document.getElementById('rfb' + qi);
   fb.className = 'quiz-fb ' + (isC ? 'sc' : 'sw');
-  fb.innerHTML = '<strong>' + (isC ? '정답!' : '오답') + '</strong>' + q.ex;
+  fb.innerHTML = '<strong>' + (isC ? '정답!' : '오답') + '</strong>' + ex;
   reviewAnswered++; if (isC) reviewCorrect++;
   updateReviewProgress();
   if (reviewAnswered === total) setTimeout(showReviewResult, 600);
