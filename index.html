@@ -401,8 +401,49 @@ body {
 }
 
 /* ══════════════════════════════
-   UTILITIES
+   REVIEW SECTION
 ══════════════════════════════ */
+.review-section { padding: 0 20px 20px; }
+
+.review-card {
+  background: linear-gradient(135deg, #1A2A4A 0%, #0D1F3A 100%);
+  border: 1px solid var(--accent);
+  border-radius: 18px; padding: 20px;
+  display: flex; align-items: center; gap: 16px;
+  cursor: pointer; transition: opacity 0.15s;
+  position: relative; overflow: hidden;
+}
+.review-card::before {
+  content: ''; position: absolute; top: -30px; right: -30px;
+  width: 100px; height: 100px; border-radius: 50%;
+  background: rgba(88,166,255,0.07);
+}
+.review-card:hover { opacity: 0.88; }
+.review-card.disabled { opacity: 0.35; cursor: default; }
+
+.review-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.review-info { flex: 1; }
+.review-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.review-desc  { font-size: 12px; color: var(--accent); opacity: 0.8; }
+.review-arrow { font-size: 18px; color: var(--accent); flex-shrink: 0; }
+
+/* ══════════════════════════════
+   REVIEW QUIZ SCREEN
+══════════════════════════════ */
+#reviewScreen { padding-bottom: 40px; }
+.review-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(88,166,255,0.12); border: 1px solid rgba(88,166,255,0.3);
+  color: var(--accent); font-size: 11px; font-weight: 700;
+  padding: 4px 10px; border-radius: 20px; letter-spacing: 0.3px;
+  margin-top: 6px;
+}
+
 .hidden { display: none !important; }
 
 /* Toast */
@@ -459,6 +500,44 @@ body {
 
   <div class="section-title">CURRICULUM</div>
   <div class="day-list" id="dayList"></div>
+
+  <div class="section-title" id="reviewSectionTitle" style="display:none">REVIEW</div>
+  <div class="review-section" id="reviewSection" style="display:none">
+    <div class="review-card" id="reviewCard" onclick="startReview()">
+      <div class="review-icon">&#x1F504;</div>
+      <div class="review-info">
+        <div class="review-title">전체 복습 퀴즈</div>
+        <div class="review-desc" id="reviewDesc">완료한 일차의 문제를 랜덤으로 출제해요</div>
+      </div>
+      <div class="review-arrow">&#8250;</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── REVIEW SCREEN ── -->
+<div id="reviewScreen" class="screen">
+  <div class="quiz-topbar">
+    <div class="back-btn" onclick="goMain()">&#8592;</div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="reviewProgFill" style="width:0%"></div></div>
+    <div class="quiz-count" id="reviewCount">0/0</div>
+    <div class="home-btn" onclick="goMain()" title="홈으로">&#8962;</div>
+  </div>
+  <div style="padding: 16px 20px 4px;">
+    <div style="font-size:15px; font-weight:800; color:var(--text);">전체 복습 퀴즈</div>
+    <div class="review-badge" id="reviewBadge"></div>
+  </div>
+  <div class="quiz-content" id="reviewContent"></div>
+  <div class="quiz-result" id="reviewResult">
+    <div style="font-size:36px; margin-bottom:12px;">&#127881;</div>
+    <div style="font-size:16px; font-weight:800; color:var(--text);">복습 완료!</div>
+    <div class="result-score" id="reviewResultScore"></div>
+    <div class="result-pct"   id="reviewResultPct"></div>
+    <div class="result-msg"   id="reviewResultMsg"></div>
+    <div class="result-btns">
+      <button class="result-btn btn-retry"  onclick="startReview()">다시 풀기</button>
+      <button class="result-btn btn-finish" onclick="goMain()">홈으로</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── STUDY SCREEN ── -->
@@ -778,6 +857,24 @@ function renderMain() {
   CURRICULUM.forEach(function(cur) {
     list.appendChild(makeDayCard(cur));
   });
+
+  // 복습 섹션 - 완료한 일차가 1개 이상이고 퀴즈 문제가 있을 때 표시
+  var reviewableDays = state.completed.filter(function(d){ return !!QUIZ[d]; });
+  var totalReviewQ = reviewableDays.reduce(function(acc, d){ return acc + QUIZ[d].length; }, 0);
+  var reviewSection = document.getElementById('reviewSection');
+  var reviewSectionTitle = document.getElementById('reviewSectionTitle');
+  var reviewCard = document.getElementById('reviewCard');
+  var reviewDesc = document.getElementById('reviewDesc');
+
+  if (reviewableDays.length > 0) {
+    reviewSection.style.display = 'block';
+    reviewSectionTitle.style.display = 'block';
+    reviewDesc.textContent = reviewableDays.length + '일차 완료 · 총 ' + totalReviewQ + '문제 랜덤 출제';
+    reviewCard.classList.remove('disabled');
+  } else {
+    reviewSection.style.display = 'none';
+    reviewSectionTitle.style.display = 'none';
+  }
 }
 
 function makeDayCard(cur) {
@@ -914,6 +1011,131 @@ function completeStudy() {
 function goMain() {
   showScreen('mainScreen');
   renderMain();
+}
+
+/* ══════════════════════════════
+   REVIEW
+══════════════════════════════ */
+var reviewQuestions = [];
+var reviewAnswered = 0, reviewCorrect = 0;
+
+function startReview() {
+  // 완료한 일차의 모든 문제 수집 후 셔플
+  var allQ = [];
+  state.completed.forEach(function(d) {
+    if (QUIZ[d]) {
+      QUIZ[d].forEach(function(q) {
+        allQ.push({ q: q, day: d });
+      });
+    }
+  });
+  // Fisher-Yates 셔플
+  for (var i = allQ.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = allQ[i]; allQ[i] = allQ[j]; allQ[j] = tmp;
+  }
+  reviewQuestions = allQ;
+  reviewAnswered = 0; reviewCorrect = 0;
+
+  // 배지 업데이트
+  var days = state.completed.filter(function(d){ return !!QUIZ[d]; });
+  document.getElementById('reviewBadge').textContent =
+    days.map(function(d){ return d + '일차'; }).join(' · ') + ' · 총 ' + allQ.length + '문제';
+
+  document.getElementById('reviewResult').style.display = 'none';
+  renderReview();
+  showScreen('reviewScreen');
+  updateReviewProgress();
+}
+
+function renderReview() {
+  var wrap = document.getElementById('reviewContent');
+  wrap.innerHTML = '';
+  document.getElementById('reviewResult').style.display = 'none';
+  reviewQuestions.forEach(function(item, i) {
+    wrap.appendChild(makeReviewCard(item.q, i, item.day, reviewQuestions.length));
+  });
+}
+
+function makeReviewCard(q, i, day, total) {
+  var card = document.createElement('div');
+  card.className = 'quiz-card';
+
+  // 일차 태그
+  var head = document.createElement('div');
+  head.className = 'quiz-card-head';
+  head.style.flexDirection = 'column';
+  head.style.gap = '8px';
+
+  var topRow = document.createElement('div');
+  topRow.style.cssText = 'display:flex; align-items:flex-start; gap:12px;';
+  var num = document.createElement('div');
+  num.className = 'quiz-num'; num.textContent = i + 1;
+  var qt = document.createElement('div');
+  qt.className = 'quiz-q'; qt.textContent = q.q;
+  topRow.appendChild(num); topRow.appendChild(qt);
+
+  var dayTag = document.createElement('div');
+  dayTag.style.cssText = 'font-size:10px; font-weight:700; color:var(--accent); background:rgba(88,166,255,0.1); border:1px solid rgba(88,166,255,0.25); border-radius:20px; padding:3px 10px; display:inline-block; margin-left:2px;';
+  dayTag.textContent = 'DAY ' + day;
+
+  head.appendChild(topRow);
+  head.appendChild(dayTag);
+  card.appendChild(head);
+
+  var opts = document.createElement('div');
+  opts.className = 'quiz-opts';
+  q.opts.forEach(function(o, oi) {
+    var btn = document.createElement('div');
+    btn.className = 'quiz-opt';
+    var ltr = document.createElement('div');
+    ltr.className = 'opt-ltr'; ltr.textContent = LTRS[oi];
+    var sp = document.createElement('span'); sp.textContent = o;
+    btn.appendChild(ltr); btn.appendChild(sp);
+    btn.addEventListener('click', function() { chooseReviewOpt(i, oi, opts, q, total); });
+    opts.appendChild(btn);
+  });
+  card.appendChild(opts);
+
+  var fb = document.createElement('div');
+  fb.className = 'quiz-fb'; fb.id = 'rfb' + i;
+  card.appendChild(fb);
+  return card;
+}
+
+function chooseReviewOpt(qi, oi, optsEl, q, total) {
+  var btns = optsEl.querySelectorAll('.quiz-opt');
+  if (btns[0].classList.contains('disabled')) return;
+  for (var k = 0; k < btns.length; k++) btns[k].classList.add('disabled');
+  var isC = oi === q.ans;
+  btns[oi].classList.add(isC ? 'correct' : 'wrong');
+  if (!isC) btns[q.ans].classList.add('correct');
+  var fb = document.getElementById('rfb' + qi);
+  fb.className = 'quiz-fb ' + (isC ? 'sc' : 'sw');
+  fb.innerHTML = '<strong>' + (isC ? '정답!' : '오답') + '</strong>' + q.ex;
+  reviewAnswered++; if (isC) reviewCorrect++;
+  updateReviewProgress();
+  if (reviewAnswered === total) setTimeout(showReviewResult, 600);
+}
+
+function updateReviewProgress() {
+  var total = reviewQuestions.length || 1;
+  document.getElementById('reviewProgFill').style.width = Math.round(reviewAnswered / total * 100) + '%';
+  document.getElementById('reviewCount').textContent = reviewAnswered + '/' + total;
+}
+
+function showReviewResult() {
+  var total = reviewQuestions.length;
+  var pct = Math.round(reviewCorrect / total * 100);
+  document.getElementById('reviewResultScore').textContent = reviewCorrect + '/' + total;
+  document.getElementById('reviewResultPct').textContent   = '정답률 ' + pct + '%';
+  document.getElementById('reviewResultMsg').textContent   =
+    pct >= 90 ? '완벽해요! 복습을 완전히 마스터했어요.' :
+    pct >= 70 ? '잘 하고 있어요! 틀린 문제를 한번 더 확인해 보세요.' :
+    pct >= 50 ? '조금 더 복습이 필요해요.' :
+                '정리본을 다시 읽고 재도전해 보세요!';
+  document.getElementById('reviewResult').style.display = 'block';
+  document.getElementById('reviewResult').scrollIntoView({ behavior: 'smooth' });
 }
 
 var toastTimer = null;
