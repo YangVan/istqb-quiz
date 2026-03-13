@@ -487,7 +487,6 @@ body {
 <div id="mainScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">ISTQB FL</div>
-    <button class="topbar-review-btn" id="topbarReviewBtn" onclick="startReview(10)">&#x26A1; 복습하기</button>
     <div class="topbar-dday" id="ddayBadge">D-??</div>
   </div>
 
@@ -509,9 +508,6 @@ body {
     <div class="stat-card"><div class="stat-val" id="statStreak">0</div><div class="stat-lbl">연속 학습</div></div>
   </div>
 
-  <div class="section-title">CURRICULUM</div>
-  <div class="day-list" id="dayList"></div>
-
   <div class="section-title" id="reviewSectionTitle" style="display:none">REVIEW</div>
   <div class="review-section" id="reviewSection" style="display:none">
     <div class="review-card" id="reviewCard10" onclick="startReview(10)" style="margin-bottom:10px;">
@@ -531,6 +527,9 @@ body {
       <div class="review-arrow">&#8250;</div>
     </div>
   </div>
+
+  <div class="section-title">CURRICULUM</div>
+  <div class="day-list" id="dayList"></div>
 </div>
 
 <!-- ── REVIEW SCREEN ── -->
@@ -888,11 +887,9 @@ function renderMain() {
     reviewSection.style.display = 'block';
     reviewSectionTitle.style.display = 'block';
     reviewDesc.textContent = reviewableDays.length + '일차 완료 · 총 ' + totalReviewQ + '문제';
-    document.getElementById('topbarReviewBtn').classList.add('visible');
   } else {
     reviewSection.style.display = 'none';
     reviewSectionTitle.style.display = 'none';
-    document.getElementById('topbarReviewBtn').classList.remove('visible');
   }
 }
 
