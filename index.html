@@ -738,7 +738,7 @@ var CURRICULUM = [
   { day:5,  title:'테스트 기법 기초',               chapter:'Chapter 4',  available: true },
   { day:6,  title:'블랙박스 테스트 기법',           chapter:'Chapter 4',  available: true },
   { day:7,  title:'화이트박스 & 경험 기반 기법',    chapter:'Chapter 4',  available: true },
-  { day:8,  title:'테스트 계획과 추정',             chapter:'Chapter 5',  available: false },
+  { day:8,  title:'테스트 계획과 추정',             chapter:'Chapter 5',  available: true },
   { day:9,  title:'테스트 모니터링과 제어',          chapter:'Chapter 5',  available: false },
   { day:10, title:'형상관리와 결함 관리',            chapter:'Chapter 5',  available: false },
   { day:11, title:'테스트 지원 도구',               chapter:'Chapter 6',  available: false },
@@ -1139,6 +1139,62 @@ var CONTENT = {
       ]
     },
     { type:'callout', title:'Chapter 4 총정리', text:'블랙박스(EP·BVA·결정테이블·상태전이·유스케이스) + 화이트박스(구문·결정 커버리지) + 경험기반(탐색적·오류추측·체크리스트) — 세 분류 모두 암기!' },
+  ],
+  8: [
+    { type:'h1', num:'01', text:'테스트 계획 (Test Planning)' },
+    { type:'h2', text:'1.1 테스트 계획의 목적' },
+    { type:'bullet', html:'테스팅의 \x3cb\x3e범위, 목적, 접근 방법, 자원, 일정\x3c/b\x3e을 정의하는 활동' },
+    { type:'bullet', html:'테스트 계획은 테스팅 전체 기간에 걸쳐 \x3cb\x3e지속적으로 업데이트\x3c/b\x3e됨 (한 번 작성 후 끝이 아님)' },
+    { type:'bullet', html:'프로젝트 계획, 개발 계획과 연계하여 작성' },
+    { type:'h2', text:'1.2 테스트 계획 주요 포함 항목' },
+    { type:'table',
+      headers:['항목', '설명'],
+      rows:[
+        ['테스트 범위 (Scope)', '무엇을 테스트하고 무엇을 제외할지'],
+        ['테스트 목적 (Objectives)', '이 테스팅으로 달성하려는 목표'],
+        ['테스트 전략 (Strategy)', '어떤 방법과 기법으로 테스트할지'],
+        ['진입/종료 기준 (Entry/Exit Criteria)', '테스팅 시작·완료 조건'],
+        ['자원 및 일정', '인력, 환경, 도구, 기간'],
+        ['리스크와 대응책', '예상 리스크 및 완화 방안'],
+      ]
+    },
+    { type:'callout', title:'핵심', text:'테스트 계획 = 범위 + 목적 + 전략 + 진입·종료 기준 + 자원·일정 + 리스크. 시험에서 "포함 항목이 아닌 것" 유형으로 자주 출제!' },
+
+    { type:'h1', num:'02', text:'진입 기준 & 종료 기준  [자주 출제]' },
+    { type:'table',
+      headers:['구분', '정의', '예시'],
+      rows:[
+        ['진입 기준 (Entry Criteria)', '테스팅을 시작하기 위해 충족해야 하는 조건', '빌드 완료, 테스트 환경 구축, 테스트 케이스 리뷰 완료'],
+        ['종료 기준 (Exit Criteria)', '테스팅을 완료했다고 판단하는 조건', '목표 커버리지 달성, 심각 결함 0건, 일정 소진'],
+      ]
+    },
+    { type:'callout', title:'암기', text:'진입(Entry) = 테스팅 시작 조건 / 종료(Exit) = 테스팅 완료 조건. 종료 기준 미달 시 리스크를 감수하고 출시하거나 일정을 연장하는 의사결정이 필요하다.' },
+
+    { type:'h1', num:'03', text:'리스크 기반 테스팅 (Risk-based Testing)  [자주 출제]' },
+    { type:'h2', text:'3.1 리스크 수준 공식' },
+    { type:'bullet', html:'\x3cb\x3e리스크 수준 = 발생 가능성(Likelihood) × 영향도(Impact)\x3c/b\x3e' },
+    { type:'bullet', html:'리스크가 높은 영역을 \x3cb\x3e우선적으로\x3c/b\x3e 테스트 — 제한된 자원을 효율적으로 배분' },
+    { type:'h2', text:'3.2 제품 리스크 vs 프로젝트 리스크' },
+    { type:'table',
+      headers:['구분', '정의', '예시'],
+      rows:[
+        ['제품 리스크\n(Product Risk)', '소프트웨어 자체의 품질 결함으로 발생하는 리스크', '결제 모듈 오류, 보안 취약점, 성능 저하'],
+        ['프로젝트 리스크\n(Project Risk)', '프로젝트 관리·진행 과정에서 발생하는 리스크', '일정 지연, 인력 부족, 요구사항 변경, 예산 초과'],
+      ]
+    },
+    { type:'callout', title:'핵심 구분', text:'제품 리스크 = 소프트웨어 품질 문제 / 프로젝트 리스크 = 프로젝트 관리 문제. 둘을 혼동하는 문제가 자주 출제된다.' },
+
+    { type:'h1', num:'04', text:'테스트 추정 (Test Estimation)' },
+    { type:'h2', text:'4.1 추정 기법 2종' },
+    { type:'table',
+      headers:['기법', '방법', '특징'],
+      rows:[
+        ['전문가 기반 추정\n(Expert-based)', '경험 있는 테스터·전문가의 판단으로 추정', '빠르지만 주관적, 소규모 프로젝트에 적합'],
+        ['메트릭 기반 추정\n(Metric-based)', '과거 유사 프로젝트의 데이터·메트릭 활용', '객관적, 데이터가 충분할 때 정확도 높음'],
+      ]
+    },
+    { type:'bullet', html:'대표 전문가 기반 기법: \x3cb\x3e광대역 델파이(Wideband Delphi)\x3c/b\x3e — 여러 전문가의 독립적 추정 후 합의' },
+    { type:'callout', title:'암기', text:'전문가 기반 = 경험·판단 의존 / 메트릭 기반 = 과거 데이터 활용. 광대역 델파이는 전문가 기반 추정의 대표 기법.' },
   ]
 };
 
@@ -1483,6 +1539,63 @@ var QUIZ = {
             '① 경계값 분석, ② 상태 전이, ③ 결정 커버리지',
             '① 경계값 분석, ② 결정 테이블, ③ 구문 커버리지'],
       ans:2, ex:'① 경계값 분석(BVA): 수치 범위 경계 근처 결함 탐지. ② 상태 전이: 로그인→실패→잠금 같은 상태 변화 워크플로 검증. ③ 결정 커버리지: 코드 분기(if-else) True/False 실행 여부 확인. Chapter 4 전체 기법 매칭 문제입니다.' },
+  ],
+  8: [
+    /* Q1 ans:3 — 테스트 계획 포함 항목 */
+    { q:'다음 중 테스트 계획(Test Plan)에 포함되는 항목으로 가장 거리가 먼 것은?',
+      opts:['테스트 범위와 테스트 목적',
+            '진입 기준 및 종료 기준',
+            '예상 리스크 및 대응책',
+            '각 테스트 케이스의 상세 입력값과 예상 결과'],
+      ans:3, ex:'테스트 케이스의 상세 입력값과 예상 결과는 테스트 설계(Test Design) 단계의 산출물입니다. 테스트 계획은 범위·목적·전략·기준·자원·일정·리스크 등 전체적인 방향을 정의하며, 개별 테스트 케이스 상세 내용은 포함하지 않습니다.' },
+
+    /* Q2 ans:1 — 제품 리스크 vs 프로젝트 리스크 구분 */
+    { q:'다음 리스크 항목들을 제품 리스크와 프로젝트 리스크로 올바르게 분류한 것은?\n① 결제 모듈에서 금액 계산 오류 발생 가능성\n② 핵심 개발자 퇴사로 인한 일정 지연',
+      opts:['① 프로젝트 리스크, ② 제품 리스크',
+            '① 제품 리스크, ② 프로젝트 리스크',
+            '① 제품 리스크, ② 제품 리스크',
+            '① 프로젝트 리스크, ② 프로젝트 리스크'],
+      ans:1, ex:'제품 리스크: 소프트웨어 자체의 품질 결함 → ① 결제 계산 오류. 프로젝트 리스크: 프로젝트 관리·진행의 문제 → ② 인력 부족으로 인한 일정 지연. 두 리스크 유형의 핵심 구분은 "품질 문제냐 vs 관리 문제냐"입니다.' },
+
+    /* Q3 ans:0 — 진입 기준 vs 종료 기준 시나리오 */
+    { q:'"테스트 환경 구축 완료, 테스트 케이스 리뷰 완료, 빌드 배포 완료"는 어떤 기준에 해당하는가?',
+      opts:['진입 기준 (Entry Criteria)',
+            '종료 기준 (Exit Criteria)',
+            '완료 기준 (Completion Criteria)',
+            '승인 기준 (Acceptance Criteria)'],
+      ans:0, ex:'진입 기준(Entry Criteria): 테스팅을 시작하기 위해 충족해야 하는 조건입니다. 환경 구축, 케이스 리뷰, 빌드 배포는 모두 테스팅 시작 전에 갖춰야 할 조건입니다. 종료 기준은 테스팅을 완료했다고 판단하는 조건(커버리지 목표 달성, 심각 결함 0건 등)입니다.' },
+
+    /* Q4 ans:2 — 광대역 델파이 */
+    { q:'여러 전문가가 독립적으로 추정을 수행한 후 결과를 공유하고 토론하여 합의에 도달하는 테스트 추정 기법은?',
+      opts:['메트릭 기반 추정 (Metric-based Estimation)',
+            '유추 추정 (Analogous Estimation)',
+            '광대역 델파이 (Wideband Delphi)',
+            '기능 점수 분석 (Function Point Analysis)'],
+      ans:2, ex:'광대역 델파이(Wideband Delphi): 전문가 기반 추정 기법의 대표 사례입니다. 여러 전문가가 독립적으로 추정 → 결과 공유 → 토론 → 재추정 과정을 반복해 합의된 추정값을 도출합니다.' },
+
+    /* Q5 ans:1 — 리스크 수준 계산 */
+    { q:'리스크 A는 발생 가능성 4, 영향도 3이고, 리스크 B는 발생 가능성 2, 영향도 5이다. 리스크 기반 테스팅에서 먼저 테스트해야 할 리스크와 그 이유는?',
+      opts:['리스크 B — 영향도가 더 높아서',
+            '리스크 A — 리스크 수준(12)이 리스크 B(10)보다 높아서',
+            '리스크 A — 발생 가능성이 더 높아서',
+            '리스크 B — 발생 가능성과 영향도의 합이 더 높아서'],
+      ans:1, ex:'리스크 수준 = 발생 가능성 × 영향도. A = 4×3 = 12, B = 2×5 = 10. 리스크 A의 수준이 더 높으므로 우선 테스트합니다. "합산"이 아닌 "곱셈"으로 계산하는 것이 핵심입니다.' },
+
+    /* Q6 ans:3 — 반응적 전략 vs 분석적 전략 */
+    { q:'테스트 전략 유형 중 사전에 상세한 테스트 계획 없이 테스팅 중 발견된 정보에 따라 즉각적으로 테스트 방향을 조정하는 전략은?',
+      opts:['분석적 전략 (Analytical Strategy)',
+            '모델 기반 전략 (Model-based Strategy)',
+            '방법론적 전략 (Methodical Strategy)',
+            '반응적 전략 (Reactive Strategy)'],
+      ans:3, ex:'반응적 전략: 사전 계획보다 실행 중 발견된 정보에 반응하며 테스트 방향을 조정합니다. 탐색적 테스팅이 대표적인 반응적 전략입니다. 분석적 전략은 리스크 분석을 통해 사전에 체계적으로 계획하는 방식입니다.' },
+
+    /* Q7 ans:0 — 종료 기준 미달 시 대응 */
+    { q:'테스팅 종료 기준(Exit Criteria)을 충족하지 못한 상태에서 제품 출시 일정이 다가왔을 때, 테스트 관리자가 취할 수 있는 가장 적절한 대응은?',
+      opts:['미충족 항목의 리스크를 이해관계자에게 보고하고, 출시 여부는 이해관계자가 리스크를 감수할지 결정하도록 한다.',
+            '종료 기준을 낮춰 현재 상태로 기준을 충족시킨 것으로 처리한다.',
+            '테스트 결과를 숨기고 예정대로 출시를 진행한다.',
+            '테스터가 임의로 출시를 중단시킨다.'],
+      ans:0, ex:'종료 기준 미달 시 테스트 관리자는 미충족 항목과 관련 리스크를 이해관계자에게 투명하게 보고해야 합니다. 출시 여부 결정(리스크 감수 or 일정 연장)은 이해관계자의 권한입니다. 테스터가 임의로 출시를 막거나 기준을 낮추는 것은 올바르지 않습니다.' },
   ]
 };
 
@@ -1528,6 +1641,7 @@ function save() {
 
 function switchProfile() {
   localStorage.removeItem(CURRENT_KEY);
+  localStorage.removeItem('istqb_session');
   renderSetup();
   showScreen('setupScreen');
 }
@@ -1535,13 +1649,29 @@ function switchProfile() {
 window.onload = function() {
   var currentNick = localStorage.getItem(CURRENT_KEY);
   var profiles = loadProfiles();
-  if (currentNick && profiles[currentNick]) {
-    state = profiles[currentNick];
+
+  // 세션 토큰 확인 — 유효하면 PIN 없이 바로 진입
+  var SESSION_KEY = 'istqb_session';
+  var session = null;
+  try { session = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch(e) {}
+
+  if (session && session.nick && session.expiry > Date.now() && profiles[session.nick]) {
+    state = profiles[session.nick];
+    localStorage.setItem(CURRENT_KEY, session.nick);
     var today = new Date(); today.setHours(0,0,0,0);
     var exam  = new Date(state.examDate); exam.setHours(0,0,0,0);
     if (Math.ceil((exam - today) / 86400000) <= 0) { showScreen('examScreen'); return; }
     showScreen('mainScreen');
     renderMain();
+    return;
+  }
+
+  // 세션 없으면 기존 흐름
+  if (currentNick && profiles[currentNick]) {
+    // 프로필은 있지만 세션 만료 → PIN 입력 화면으로
+    renderSetup();
+    showScreen('setupScreen');
+    showLogin(currentNick);
   } else {
     renderSetup();
     showScreen('setupScreen');
@@ -1675,6 +1805,12 @@ function initPinInputs(prefix, onComplete) {
 }
 
 /* ── 로그인 검증 ── */
+function issueSession(nick) {
+  // 24시간 세션 토큰 발급
+  var session = { nick: nick, expiry: Date.now() + 24 * 60 * 60 * 1000 };
+  localStorage.setItem('istqb_session', JSON.stringify(session));
+}
+
 function verifyLogin(pin) {
   var profiles = loadProfiles();
   var p = profiles[loginTarget];
@@ -1682,6 +1818,7 @@ function verifyLogin(pin) {
   if (p.pin === hashPin(pin)) {
     state = p;
     localStorage.setItem(CURRENT_KEY, loginTarget);
+    issueSession(loginTarget);
     var today = new Date(); today.setHours(0,0,0,0);
     var exam  = new Date(state.examDate); exam.setHours(0,0,0,0);
     if (Math.ceil((exam - today) / 86400000) <= 0) { showScreen('examScreen'); return; }
@@ -1772,6 +1909,7 @@ function startStudy() {
 
   state = { nickname: nick, pin: hashPin(pin), examDate: val, completed: [], streak: 0 };
   save();
+  issueSession(nick);
   showScreen('mainScreen');
   renderMain();
 }
