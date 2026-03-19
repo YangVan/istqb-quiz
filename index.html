@@ -628,6 +628,7 @@ body {
     <div style="display:flex;align-items:center;gap:8px;">
       <div id="topbarNickname" style="font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;padding:4px 8px;border-radius:8px;border:1px solid var(--border);" onclick="switchProfile()" title="프로필 전환"></div>
       <div class="topbar-dday" id="ddayBadge">D-??</div>
+      <div onclick="openEditModal()" title="설정" style="font-size:16px;cursor:pointer;padding:4px 6px;border-radius:8px;border:1px solid var(--border);color:var(--text2);line-height:1;">&#9881;</div>
     </div>
   </div>
 
@@ -742,6 +743,18 @@ body {
     </div>
   </div>
 
+  <div class="section-title" id="bookmarkSectionTitle" style="display:none">북마크</div>
+  <div id="bookmarkSection" style="display:none;padding:0 20px 4px;">
+    <div class="review-card" onclick="startBookmark()">
+      <div class="review-icon" style="background:rgba(240,165,0,0.12);border:1px solid rgba(240,165,0,0.3);">&#11088;</div>
+      <div class="review-info">
+        <div class="review-title">북마크 문제</div>
+        <div class="review-desc" id="bookmarkDesc">북마크한 문제 0개</div>
+      </div>
+      <div class="review-arrow">&#8250;</div>
+    </div>
+  </div>
+
   <div class="section-title">CURRICULUM</div>
   <div class="day-list" id="dayList"></div>
 </div>
@@ -780,12 +793,27 @@ body {
 </div>
 
 <!-- ── MOCK EXAM SCREEN ── -->
-<div id="mockScreen" class="screen">
+<div id="mockScreen" class="screen" style="position:relative;">
   <div class="quiz-topbar">
     <div class="back-btn" onclick="confirmExitMock()">&#8592;</div>
     <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="mockProgFill" style="width:0%"></div></div>
-    <div class="quiz-count" id="mockTimerDisplay" style="font-size:13px;font-weight:800;color:var(--accent);">60:00</div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div id="mockTimerDisplay" style="font-size:13px;font-weight:800;color:var(--accent);">60:00</div>
+      <div id="mockPauseBtn" onclick="toggleMockPause()" title="일시정지"
+        style="font-size:14px;cursor:pointer;padding:3px 6px;border-radius:7px;border:1px solid var(--border);color:var(--text2);line-height:1;">&#9646;&#9646;</div>
+    </div>
     <div class="home-btn" onclick="confirmExitMock()" title="홈으로">&#8962;</div>
+  </div>
+
+  <!-- 일시정지 오버레이 -->
+  <div id="mockPauseOverlay" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:10;flex-direction:column;align-items:center;justify-content:center;">
+    <div style="font-size:40px;margin-bottom:16px;">⏸</div>
+    <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px;">일시정지 중</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:24px;">재개 버튼을 누르면 타이머가 다시 시작돼요</div>
+    <button onclick="toggleMockPause()"
+      style="padding:12px 32px;border-radius:12px;font-family:inherit;font-size:15px;font-weight:800;border:none;background:var(--accent);color:#0D1117;cursor:pointer;">
+      ▶ 재개하기
+    </button>
   </div>
 
   <!-- 문제 번호 네비게이션 -->
@@ -826,6 +854,37 @@ body {
     <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:12px;">오답 해설</div>
     <div id="mockReviewContent"></div>
     <button onclick="goMain()" style="margin-top:16px;width:100%;padding:13px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;border:none;background:var(--accent);color:#0D1117;cursor:pointer;">홈으로</button>
+  </div>
+</div>
+
+<!-- ── BOOKMARK SCREEN ── -->
+<div id="bookmarkScreen" class="screen">
+  <div class="quiz-topbar">
+    <div class="back-btn" onclick="goMain()">&#8592;</div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="bookmarkProgFill" style="width:0%"></div></div>
+    <div class="quiz-count" id="bookmarkCount">0/0</div>
+    <div class="home-btn" onclick="goMain()" title="홈으로">&#8962;</div>
+  </div>
+  <div style="padding:14px 20px 4px;">
+    <div style="font-size:15px;font-weight:800;color:var(--text);">북마크 문제</div>
+    <div style="font-size:12px;color:var(--text2);margin-top:2px;">★ 버튼으로 언제든 북마크를 추가·해제할 수 있어요</div>
+  </div>
+  <div class="quiz-content" id="bookmarkContent"></div>
+  <div id="bookmarkFooter" style="display:none;padding:12px 20px;border-top:1px solid var(--border);background:var(--bg2);">
+    <button id="bookmarkNextBtn" onclick="bookmarkNext()"
+      style="width:100%;padding:14px;border-radius:12px;font-family:inherit;font-size:15px;font-weight:800;border:none;background:var(--accent);color:#0D1117;cursor:pointer;">
+      다음 문제 →
+    </button>
+  </div>
+  <div class="quiz-result" id="bookmarkResult">
+    <div style="font-size:36px;margin-bottom:12px;">&#11088;</div>
+    <div style="font-size:16px;font-weight:800;color:var(--text);">북마크 완료!</div>
+    <div class="result-score" id="bookmarkResultScore"></div>
+    <div class="result-msg"   id="bookmarkResultMsg"></div>
+    <div class="result-btns">
+      <button class="result-btn btn-retry"  onclick="startBookmark()">다시 풀기</button>
+      <button class="result-btn btn-finish" onclick="goMain()">홈으로</button>
+    </div>
   </div>
 </div>
 
@@ -2427,6 +2486,7 @@ var state = {
   wrongNotes: [],
   mockHistory: [],
   studyLog: [],
+  bookmarks: [],
 };
 
 /* completed 헬퍼 함수 */
@@ -2699,6 +2759,75 @@ function verifyLogin(pin) {
 /* ── 삭제 모달 ── */
 var deleteTarget = null;
 
+/* ── 시험일 수정 모달 ── */
+function openEditModal() {
+  // 현재 시험일 기본값 세팅
+  var cur = state.examDate ? state.examDate.split('T')[0] : '';
+  document.getElementById('editExamDate').value = cur;
+  document.getElementById('editError').textContent = '';
+  clearPins('epin');
+  document.getElementById('editModal').style.display = 'flex';
+  initPinInputs('epin', null);
+  // 날짜 최솟값: 내일
+  var tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById('editExamDate').min = tomorrow.toISOString().split('T')[0];
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').style.display = 'none';
+  clearPins('epin');
+}
+
+function confirmEdit() {
+  var newDate = document.getElementById('editExamDate').value;
+  var errEl   = document.getElementById('editError');
+
+  // 날짜 검증
+  if (!newDate) {
+    errEl.textContent = '시험 예정일을 선택해 주세요.';
+    return;
+  }
+  var selected = new Date(newDate); selected.setHours(0,0,0,0);
+  var today    = new Date();        today.setHours(0,0,0,0);
+  if (selected <= today) {
+    errEl.textContent = '오늘 이후 날짜를 선택해 주세요.';
+    return;
+  }
+
+  // PIN 수집
+  var pin = '';
+  for (var i = 0; i < 4; i++) {
+    var v = document.getElementById('epin' + i).value;
+    if (!v) { errEl.textContent = 'PIN 4자리를 모두 입력해 주세요.'; return; }
+    pin += v;
+  }
+
+  // PIN 검증
+  if (hashPin(pin) !== state.pin) {
+    errEl.textContent = 'PIN이 틀렸어요. 다시 시도해 주세요.';
+    for (var i = 0; i < 4; i++) {
+      document.getElementById('epin' + i).classList.add('error');
+    }
+    setTimeout(function() {
+      clearPins('epin');
+      errEl.textContent = '';
+      for (var i = 0; i < 4; i++) {
+        document.getElementById('epin' + i).classList.remove('error');
+      }
+      initPinInputs('epin', null);
+    }, 800);
+    return;
+  }
+
+  // 시험일 업데이트
+  state.examDate = newDate;
+  save();
+  closeEditModal();
+  renderMain();
+  showToast('✅ 시험일이 변경되었어요!');
+}
+
 function showDeleteModal(nick) {
   deleteTarget = nick;
   document.getElementById('deleteModalTitle').textContent = '"' + nick + '" 프로필 삭제';
@@ -2764,7 +2893,7 @@ function startStudy() {
   var today = new Date(); today.setHours(0,0,0,0);
   if (exam <= today) return alert('시험일은 오늘 이후여야 해요!');
 
-  state = { nickname: nick, pin: hashPin(pin), examDate: val, completed: [], streak: 0, lastStudyDate: null, wrongNotes: [], mockHistory: [], studyLog: [] };
+  state = { nickname: nick, pin: hashPin(pin), examDate: val, completed: [], streak: 0, lastStudyDate: null, wrongNotes: [], mockHistory: [], studyLog: [], bookmarks: [] };
   save();
   issueSession(nick);
   showScreen('mainScreen');
@@ -3031,7 +3160,7 @@ function renderMain() {
     mockSectionTitle.style.display = 'none';
   }
 
-  // 오답 노트 섹션 — 오답이 1개 이상일 때 노출
+  // 오답 노트 섹션
   var notes = state.wrongNotes || [];
   var wrongSection      = document.getElementById('wrongNoteSection');
   var wrongSectionTitle = document.getElementById('wrongNoteSectionTitle');
@@ -3043,6 +3172,20 @@ function renderMain() {
   } else {
     wrongSection.style.display      = 'none';
     wrongSectionTitle.style.display = 'none';
+  }
+
+  // 북마크 섹션
+  var bmarks = state.bookmarks || [];
+  var bmSection      = document.getElementById('bookmarkSection');
+  var bmSectionTitle = document.getElementById('bookmarkSectionTitle');
+  var bmDesc         = document.getElementById('bookmarkDesc');
+  if (bmarks.length > 0) {
+    bmSection.style.display      = 'block';
+    bmSectionTitle.style.display = 'block';
+    bmDesc.textContent = '북마크한 문제 ' + bmarks.length + '개';
+  } else {
+    bmSection.style.display      = 'none';
+    bmSectionTitle.style.display = 'none';
   }
 }
 
@@ -3278,7 +3421,23 @@ function makeReviewCard(q, i, day, total) {
   num.className = 'quiz-num'; num.textContent = i + 1;
   var qt = document.createElement('div');
   qt.className = 'quiz-q'; qt.textContent = q.q;
-  topRow.appendChild(num); topRow.appendChild(qt);
+
+  // 북마크 버튼
+  var bmKey = makeWrongKey('review', day, q.q);
+  var isBm  = isBookmarked(bmKey);
+  var bmBtn = document.createElement('div');
+  bmBtn.id = 'bmbtn_r_' + i;
+  bmBtn.style.cssText = 'font-size:18px;cursor:pointer;flex-shrink:0;line-height:1;color:' + (isBm ? '#f0a500' : 'var(--text3)') + ';';
+  bmBtn.textContent = isBm ? '★' : '☆';
+  bmBtn.title = isBm ? '북마크 해제' : '북마크';
+  (function(capturedQ, capturedDay, capturedId) {
+    bmBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleBookmark('review', capturedDay, capturedQ, capturedId);
+    });
+  })(q, day, 'bmbtn_r_' + i);
+
+  topRow.appendChild(num); topRow.appendChild(qt); topRow.appendChild(bmBtn);
 
   var dayTag = document.createElement('div');
   dayTag.style.cssText = 'font-size:10px; font-weight:700; color:var(--accent); background:rgba(88,166,255,0.1); border:1px solid rgba(88,166,255,0.25); border-radius:20px; padding:3px 10px; display:inline-block; margin-left:2px;';
@@ -3795,6 +3954,193 @@ function showSummaryScreen() {
   showScreen('summaryScreen');
 }
 
+/* ══════════════════════════════
+   BOOKMARK (퀴즈 북마크)
+══════════════════════════════ */
+function isBookmarked(key) {
+  return (state.bookmarks || []).some(function(b) { return b.key === key; });
+}
+
+function toggleBookmark(source, day, qObj, btnId) {
+  if (!state.bookmarks) state.bookmarks = [];
+  var key = makeWrongKey(source, day, qObj.q);
+  var idx = state.bookmarks.findIndex(function(b) { return b.key === key; });
+  if (idx >= 0) {
+    state.bookmarks.splice(idx, 1);
+    showToast('북마크가 해제됐어요');
+  } else {
+    state.bookmarks.push({
+      key:    key,
+      source: source,
+      day:    day,
+      q:      qObj.q,
+      opts:   qObj.opts,
+      ans:    qObj.ans,
+      ex:     qObj.ex,
+    });
+    showToast('★ 북마크에 추가됐어요!');
+  }
+  save();
+  // 버튼 아이콘 즉시 업데이트
+  var btn = document.getElementById(btnId);
+  if (btn) {
+    var now = isBookmarked(key);
+    btn.textContent = now ? '★' : '☆';
+    btn.style.color = now ? '#f0a500' : 'var(--text3)';
+    btn.title = now ? '북마크 해제' : '북마크';
+  }
+}
+
+/* 북마크 화면 */
+var bookmarkList  = [];
+var bookmarkIdx   = 0;
+var bookmarkRight = 0;
+var bookmarkTotal = 0;
+
+function startBookmark() {
+  var bmarks = state.bookmarks || [];
+  if (bmarks.length === 0) { showToast('북마크한 문제가 없어요!'); return; }
+
+  // 셔플
+  bookmarkList = bmarks.slice();
+  for (var i = bookmarkList.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = bookmarkList[i]; bookmarkList[i] = bookmarkList[j]; bookmarkList[j] = t;
+  }
+  bookmarkIdx   = 0;
+  bookmarkRight = 0;
+  bookmarkTotal = bookmarkList.length;
+
+  document.getElementById('bookmarkResult').style.display  = 'none';
+  document.getElementById('bookmarkContent').style.display = 'block';
+  document.getElementById('bookmarkFooter').style.display  = 'none';
+  renderBookmarkQ(0);
+  showScreen('bookmarkScreen');
+}
+
+function renderBookmarkQ(idx) {
+  bookmarkIdx = idx;
+  var note  = bookmarkList[idx];
+  var total = bookmarkList.length;
+  var LTRS  = ['A','B','C','D'];
+
+  document.getElementById('bookmarkProgFill').style.width =
+    Math.round((idx / total) * 100) + '%';
+  document.getElementById('bookmarkCount').textContent = (idx + 1) + '/' + total;
+
+  // 보기 셔플
+  var indices = [0,1,2,3];
+  for (var s = indices.length-1; s > 0; s--) {
+    var r = Math.floor(Math.random()*(s+1));
+    var t = indices[s]; indices[s]=indices[r]; indices[r]=t;
+  }
+  var shuffledOpts = indices.map(function(i){ return note.opts[i]; });
+  var newAns = indices.indexOf(note.ans);
+  note._bmShuffled = shuffledOpts;
+  note._bmNewAns   = newAns;
+
+  var sourceLabel = note.source === 'mock' ? '모의고사'
+    : note.source === 'review' ? '복습 (' + note.day + '일차)'
+    : note.day + '일차';
+
+  var isBm = isBookmarked(note.key);
+  var html = '<div style="padding:14px 18px 100px;">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">';
+  html += '<div style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:rgba(240,165,0,0.12);color:#f0a500;border:1px solid rgba(240,165,0,0.3);">★ ' + sourceLabel + '</div>';
+  html += '<div onclick="toggleBookmark(\'' + note.source + '\',' + note.day + ',bookmarkList[' + idx + '],\'bmstar_' + idx + '\')" id="bmstar_' + idx + '" style="font-size:20px;cursor:pointer;color:' + (isBm ? '#f0a500' : 'var(--text3)') + ';">' + (isBm ? '★' : '☆') + '</div>';
+  html += '</div>';
+  html += '<div style="font-size:14px;font-weight:700;color:var(--text);line-height:1.7;margin-bottom:16px;white-space:pre-wrap;">' + note.q + '</div>';
+
+  shuffledOpts.forEach(function(opt, oi) {
+    html += '<div id="bmOpt' + oi + '" onclick="selectBookmarkOpt(' + idx + ',' + oi + ')" ';
+    html += 'style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:10px;';
+    html += 'background:var(--bg3);border:1.5px solid var(--border);margin-bottom:8px;cursor:pointer;word-break:keep-all;">';
+    html += '<div style="width:24px;height:24px;min-width:24px;border-radius:6px;background:var(--bg2);';
+    html += 'display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text2);margin-top:1px;">' + LTRS[oi] + '</div>';
+    html += '<span style="font-size:13.5px;color:var(--text);line-height:1.6;">' + opt + '</span>';
+    html += '</div>';
+  });
+  html += '</div>';
+  document.getElementById('bookmarkContent').innerHTML = html;
+}
+
+function selectBookmarkOpt(idx, oi) {
+  var note   = bookmarkList[idx];
+  var newAns = note._bmNewAns !== undefined ? note._bmNewAns : note.ans;
+  var isRight = (oi === newAns);
+
+  note.opts.forEach(function(opt, i) {
+    var el = document.getElementById('bmOpt' + i);
+    if (!el) return;
+    if (i === newAns) {
+      el.style.background = 'var(--lgreen)'; el.style.borderColor = 'var(--green)';
+      el.querySelector('div').style.background = 'var(--green)'; el.querySelector('div').style.color = '#fff';
+    } else if (i === oi && !isRight) {
+      el.style.background = '#3a1a1a'; el.style.borderColor = 'var(--red)';
+      el.querySelector('div').style.background = 'var(--red)'; el.querySelector('div').style.color = '#fff';
+    }
+    el.style.cursor = 'default'; el.onclick = null;
+  });
+
+  if (isRight) bookmarkRight++;
+
+  // 해설
+  var content = document.getElementById('bookmarkContent');
+  var ex = document.createElement('div');
+  ex.style.cssText = 'margin:8px 18px 16px;padding:10px 14px;border-radius:10px;background:rgba(88,166,255,0.08);border-left:3px solid var(--accent);';
+  ex.innerHTML = '<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px;">' +
+    (isRight ? '✅ 정답!' : '❌ 오답') + '</div>' +
+    '<div style="font-size:12px;color:var(--text);line-height:1.6;">' + note.ex + '</div>';
+  content.querySelector('div').appendChild(ex);
+
+  var footer = document.getElementById('bookmarkFooter');
+  var btn    = document.getElementById('bookmarkNextBtn');
+  if (footer && btn) {
+    btn.textContent = (bookmarkIdx + 1 >= bookmarkTotal) ? '결과 보기' : '다음 문제 →';
+    footer.style.display = 'block';
+  }
+}
+
+function bookmarkNext() {
+  document.getElementById('bookmarkFooter').style.display = 'none';
+  if (bookmarkIdx + 1 < bookmarkTotal) {
+    renderBookmarkQ(bookmarkIdx + 1);
+  } else {
+    var pct = bookmarkTotal > 0 ? Math.round(bookmarkRight / bookmarkTotal * 100) : 0;
+    document.getElementById('bookmarkResultScore').textContent = bookmarkRight + ' / ' + bookmarkTotal + ' (' + pct + '%)';
+    document.getElementById('bookmarkResultMsg').textContent =
+      pct === 100 ? '완벽해요! 북마크 문제를 모두 맞혔어요.' :
+      pct >= 70   ? '잘 하고 있어요! 틀린 문제를 다시 확인해보세요.' :
+                    '조금 더 복습이 필요해요. 다시 도전해보세요!';
+    document.getElementById('bookmarkContent').style.display = 'none';
+    document.getElementById('bookmarkResult').style.display  = 'flex';
+  }
+}
+
+/* ══════════════════════════════
+   MOCK PAUSE (모의고사 일시정지)
+══════════════════════════════ */
+var mockPaused = false;
+
+function toggleMockPause() {
+  mockPaused = !mockPaused;
+  var overlay = document.getElementById('mockPauseOverlay');
+  var btn     = document.getElementById('mockPauseBtn');
+  if (!overlay || !btn) return;
+
+  if (mockPaused) {
+    clearInterval(mockTimer);
+    overlay.style.display = 'flex';
+    btn.textContent = '▶';
+    btn.title = '재개';
+  } else {
+    overlay.style.display = 'none';
+    btn.innerHTML = '&#9646;&#9646;';
+    btn.title = '일시정지';
+    startMockTimer();
+  }
+}
+
 var toastTimer = null;
 function showToast(msg) {
   var t = document.getElementById('toast');
@@ -3840,7 +4186,21 @@ function makeQuizCard(q, i, total) {
   var qt = document.createElement('div');
   qt.className = 'quiz-q';
   qt.textContent = q.q;
-  head.appendChild(num); head.appendChild(qt);
+
+  // 북마크 버튼
+  var bmKey = makeWrongKey('quiz', currentDay, q.q);
+  var isBm  = isBookmarked(bmKey);
+  var bmBtn = document.createElement('div');
+  bmBtn.id = 'bmbtn_q_' + i;
+  bmBtn.style.cssText = 'font-size:18px;cursor:pointer;flex-shrink:0;line-height:1;color:' + (isBm ? '#f0a500' : 'var(--text3)') + ';';
+  bmBtn.textContent = isBm ? '★' : '☆';
+  bmBtn.title = isBm ? '북마크 해제' : '북마크';
+  bmBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    toggleBookmark('quiz', currentDay, q, 'bmbtn_q_' + i);
+  });
+
+  head.appendChild(num); head.appendChild(qt); head.appendChild(bmBtn);
   card.appendChild(head);
 
   var opts = document.createElement('div');
@@ -3998,6 +4358,7 @@ function startMockExam() {
   mockAnswers   = mockQuestions.map(function(){ return null; });
   mockCurrent   = 0;
   mockSubmitted = false;
+  mockPaused    = false;
   mockSecondsLeft = 60 * 60;
 
   document.getElementById('mockResult').style.display  = 'none';
@@ -4257,6 +4618,29 @@ function showMockReview() {
 }
 
 </script>
+
+<div id="editModal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-icon">⚙️</div>
+    <div class="modal-title">시험일 수정</div>
+    <div class="modal-desc">새로운 시험 예정일을 선택하고<br>PIN을 입력해 확인하세요.</div>
+    <div style="width:100%;margin-bottom:12px;">
+      <input type="date" class="date-input" id="editExamDate" style="width:100%;margin-bottom:0;">
+    </div>
+    <div class="modal-desc" style="margin-bottom:6px;">PIN 확인</div>
+    <div class="pin-wrap">
+      <input class="pin-box" id="epin0" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]">
+      <input class="pin-box" id="epin1" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]">
+      <input class="pin-box" id="epin2" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]">
+      <input class="pin-box" id="epin3" type="password" inputmode="numeric" maxlength="1" pattern="[0-9]">
+    </div>
+    <p id="editError" style="font-size:13px;color:var(--red);margin-top:4px;min-height:18px;"></p>
+    <div class="modal-btns">
+      <button class="modal-btn modal-cancel" onclick="closeEditModal()">취소</button>
+      <button class="modal-btn modal-confirm" onclick="confirmEdit()">변경하기</button>
+    </div>
+  </div>
+</div>
 
 <div id="deleteModal" class="modal-overlay" style="display:none">
   <div class="modal-box">
