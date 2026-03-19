@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0D1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ISTQB FL">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>ISTQB FL Study</title>
 <style>
@@ -638,15 +646,15 @@ body {
     <div class="progress-wrap">
       <div class="progress-label">
         <span>전체 진도</span>
-        <span id="progressText">0 / 11일차</span>
+        <span id="progressText">0 / 11강</span>
       </div>
       <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
     </div>
   </div>
 
   <div class="stats-row">
-    <div class="stat-card"><div class="stat-val" id="statDone">0</div><div class="stat-lbl">완료한 날</div></div>
-    <div class="stat-card"><div class="stat-val" id="statLeft">11</div><div class="stat-lbl">남은 날</div></div>
+    <div class="stat-card"><div class="stat-val" id="statDone">0</div><div class="stat-lbl">완료한 강의</div></div>
+    <div class="stat-card"><div class="stat-val" id="statLeft">11</div><div class="stat-lbl">남은 강의</div></div>
     <div class="stat-card"><div class="stat-val" id="statStreak">0</div><div class="stat-lbl">연속 학습</div></div>
   </div>
 
@@ -705,7 +713,7 @@ body {
       <div class="review-icon">&#x1F4DA;</div>
       <div class="review-info">
         <div class="review-title">전체 복습</div>
-        <div class="review-desc" id="reviewDesc">완료한 일차 전체 문제 랜덤 출제</div>
+        <div class="review-desc" id="reviewDesc">완료한 강의 전체 문제 랜덤 출제</div>
       </div>
       <div class="review-arrow">&#8250;</div>
     </div>
@@ -2629,7 +2637,7 @@ function renderSetup() {
 
       var info = document.createElement('div');
       info.innerHTML = '<div class="profile-name">' + nick + '</div>' +
-        '<div class="profile-meta">' + done + '일차 완료 · ' + ddayTxt + '</div>';
+        '<div class="profile-meta">' + done + '강 완료 · ' + ddayTxt + '</div>';
 
       left.appendChild(avatar); left.appendChild(info);
 
@@ -3057,16 +3065,16 @@ function renderScheduleBanner(schedule, dday) {
   } else if (schedule.status === 'review') {
     // 모두 완료, 남은 기간별 메시지
     if (dday > 7) {
-      html = '<div class="schedule-banner ahead">🎉 11일차 완료! D-' + dday + ' — 복습과 모의고사로 실력을 다져요.</div>';
+      html = '<div class="schedule-banner ahead">🎉 11강 완료! D-' + dday + ' — 복습과 모의고사로 실력을 다져요.</div>';
     } else if (dday > 3) {
       html = '<div class="schedule-banner today">⚡ D-' + dday + ' 시험 임박! 모의고사 반복 풀이에 집중하세요.</div>';
     } else {
       html = '<div class="schedule-banner today">🔥 D-' + dday + ' 마지막 점검! 요약 카드와 오답 노트를 확인하세요.</div>';
     }
   } else if (schedule.delayedDays.length > 0) {
-    html = '<div class="schedule-banner delayed">⚠️ ' + schedule.delayedDays.length + '개 일차가 일정보다 뒤처졌어요. 오늘 ' + schedule.todayDays.length + '일차를 완료해야 해요!</div>';
+    html = '<div class="schedule-banner delayed">⚠️ ' + schedule.delayedDays.length + '개 강의가 일정보다 뒤처졌어요. 오늘 ' + schedule.todayDays.length + '강을 완료해야 해요!</div>';
   } else if (schedule.todayDays.length > 0) {
-    html = '<div class="schedule-banner today">📅 오늘의 목표: <span style="margin-left:4px;">' + schedule.todayDays.map(function(d){ return d + '일차'; }).join(', ') + ' 학습 완료</span></div>';
+    html = '<div class="schedule-banner today">📅 오늘의 목표: <span style="margin-left:4px;">' + schedule.todayDays.map(function(d){ return d + '강'; }).join(', ') + ' 학습 완료</span></div>';
   } else {
     html = '<div class="schedule-banner ahead">🎉 일정보다 앞서가는 중이에요! 내일까지 여유가 있어요.</div>';
   }
@@ -3103,7 +3111,7 @@ function renderMain() {
 
   var done = completedDays().length;
   var total = CURRICULUM.length;
-  document.getElementById('progressText').textContent = done + ' / ' + total + '일차';
+  document.getElementById('progressText').textContent = done + ' / ' + total + '강';
   document.getElementById('progressFill').style.width = Math.round(done/total*100) + '%';
   document.getElementById('statDone').textContent   = done;
   document.getElementById('statLeft').textContent   = total - done;
@@ -3141,7 +3149,7 @@ function renderMain() {
   if (reviewableDays.length > 0) {
     reviewSection.style.display = 'block';
     reviewSectionTitle.style.display = 'block';
-    reviewDesc.textContent = reviewableDays.length + '일차 완료 · 총 ' + totalReviewQ + '문제';
+    reviewDesc.textContent = reviewableDays.length + '강 완료 · 총 ' + totalReviewQ + '문제';
   } else {
     reviewSection.style.display = 'none';
     reviewSectionTitle.style.display = 'none';
@@ -3218,7 +3226,7 @@ function makeDayCard(cur, schedule) {
   info.className = 'day-info';
   var lbl = document.createElement('div');
   lbl.className = 'day-label';
-  lbl.textContent = cur.chapter + '  |  DAY ' + cur.day;
+  lbl.textContent = cur.chapter + '  |  ' + cur.day + '강';
   var title = document.createElement('div');
   title.className = 'day-title';
   title.textContent = cur.title;
@@ -3255,14 +3263,14 @@ function openDay(day) {
   var cur = CURRICULUM.find(function(c){ return c.day === day; });
   if (!cur || (!cur.available && !isDayCompleted(day))) return;
   currentDay = day;
-  document.getElementById('studyTopTitle').textContent = 'Day ' + day;
-  document.getElementById('studyDayLabel').textContent = cur.chapter + '  |  DAY ' + day;
+  document.getElementById('studyTopTitle').textContent = day + '강';
+  document.getElementById('studyDayLabel').textContent = cur.chapter + '  |  ' + day + '강';
   document.getElementById('studyTitle').textContent    = cur.title;
   document.getElementById('studyChapter').textContent  = cur.chapter;
 
   var isDone = isDayCompleted(day);
   var btn = document.getElementById('completeBtn');
-  btn.textContent = isDone ? '이미 완료한 일차예요' : '다 읽었어요 - 문제 풀기';
+  btn.textContent = isDone ? '이미 완료한 강의예요' : '다 읽었어요 - 문제 풀기';
   btn.disabled = isDone;
 
   renderContent(day);
@@ -3374,7 +3382,7 @@ function startReview(limit) {
   var isShort = reviewLimit > 0;
   document.getElementById('reviewScreenTitle').textContent = isShort ? '빠른 복습 (10문제)' : '전체 복습';
   document.getElementById('reviewBadge').textContent =
-    days.map(function(d){ return d + '일차'; }).join(' · ') +
+    days.map(function(d){ return d + '강'; }).join(' · ') +
     (isShort ? ' · 랜덤 10문제' : ' · 전체 ' + allQ.length + '문제');
 
   document.getElementById('reviewResult').style.display = 'none';
@@ -3441,7 +3449,7 @@ function makeReviewCard(q, i, day, total) {
 
   var dayTag = document.createElement('div');
   dayTag.style.cssText = 'font-size:10px; font-weight:700; color:var(--accent); background:rgba(88,166,255,0.1); border:1px solid rgba(88,166,255,0.25); border-radius:20px; padding:3px 10px; display:inline-block; margin-left:2px;';
-  dayTag.textContent = 'DAY ' + day;
+  dayTag.textContent = day + '강';
 
   head.appendChild(topRow);
   head.appendChild(dayTag);
@@ -3600,8 +3608,8 @@ function renderWrongQ(idx) {
   note._newAns       = newAns;
 
   var sourceLabel = note.source === 'mock' ? '모의고사'
-    : note.source === 'review' ? '복습 (' + note.day + '일차)'
-    : note.day + '일차';
+    : note.source === 'review' ? '복습 (' + note.day + '강)'
+    : note.day + '강';
 
   var html = '<div style="padding:14px 18px 100px;">';
   html += '<div style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:rgba(248,81,73,0.12);color:var(--red);border:1px solid rgba(248,81,73,0.3);display:inline-block;margin-bottom:10px;">';
@@ -4040,8 +4048,8 @@ function renderBookmarkQ(idx) {
   note._bmNewAns   = newAns;
 
   var sourceLabel = note.source === 'mock' ? '모의고사'
-    : note.source === 'review' ? '복습 (' + note.day + '일차)'
-    : note.day + '일차';
+    : note.source === 'review' ? '복습 (' + note.day + '강)'
+    : note.day + '강';
 
   var isBm = isBookmarked(note.key);
   var html = '<div style="padding:14px 18px 100px;">';
@@ -4151,7 +4159,7 @@ function showToast(msg) {
 }
 
 function showComingSoon(day) {
-  showToast('🔒 ' + day + '일차는 아직 준비 중이에요. 내일 업데이트 예정!');
+  showToast('🔒 ' + day + '강은 아직 준비 중이에요. 내일 업데이트 예정!');
 }
 
 /* ══════════════════════════════
@@ -4615,6 +4623,17 @@ function showMockReview() {
   }
   document.getElementById('mockReviewContent').innerHTML = html;
   document.getElementById('mockReview').style.display = 'block';
+}
+
+/* ══════════════════════════════
+   SERVICE WORKER 등록 (PWA)
+══════════════════════════════ */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/istqb-quiz/sw.js')
+      .then(function(reg) { console.log('SW 등록 완료:', reg.scope); })
+      .catch(function(err) { console.log('SW 등록 실패:', err); });
+  });
 }
 
 </script>
