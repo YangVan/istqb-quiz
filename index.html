@@ -230,6 +230,30 @@ body {
 .badge-active { background: var(--lblue);  color: var(--accent); }
 .badge-lock   { background: var(--bg3);    color: var(--text3); }
 
+/* 학습 일정 뱃지 */
+.badge-today   { background: #2d1f00; color: #f0a500; border: 1px solid #f0a500; }
+.badge-delayed { background: #3a1a1a; color: var(--red); border: 1px solid var(--red); }
+.badge-ahead   { background: var(--lgreen); color: var(--green); }
+
+/* 오늘의 학습 목표 배너 */
+.schedule-banner {
+  margin: 0 20px 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  word-break: keep-all;
+  line-height: 1.5;
+}
+.schedule-banner.today   { background: #2d1f00; color: #f0a500; border: 1px solid rgba(240,165,0,0.4); }
+.schedule-banner.ahead   { background: var(--lgreen); color: var(--green); border: 1px solid rgba(63,185,80,0.4); }
+.schedule-banner.delayed { background: #3a1a1a; color: var(--red); border: 1px solid rgba(248,81,73,0.4); }
+.schedule-banner.done    { background: #1a2d1a; color: #3fb950; border: 1px solid rgba(63,185,80,0.4); }
+.schedule-banner.exam    { background: #1a1a3a; color: var(--accent); border: 1px solid rgba(88,166,255,0.4); }
+
 /* ══════════════════════════════
    STUDY SCREEN
 ══════════════════════════════ */
@@ -624,6 +648,9 @@ body {
     <div class="stat-card"><div class="stat-val" id="statLeft">11</div><div class="stat-lbl">남은 날</div></div>
     <div class="stat-card"><div class="stat-val" id="statStreak">0</div><div class="stat-lbl">연속 학습</div></div>
   </div>
+
+  <!-- 학습 일정 배너 -->
+  <div id="scheduleBanner" style="display:none;"></div>
 
   <div class="section-title" id="reviewSectionTitle" style="display:none">REVIEW</div>
   <div class="review-section" id="reviewSection" style="display:none">
@@ -2586,6 +2613,93 @@ function startStudy() {
 /* ══════════════════════════════
    MAIN
 ══════════════════════════════ */
+/* ══════════════════════════════
+   SCHEDULE (시험일 기반 학습 일정)
+══════════════════════════════ */
+function calcSchedule(dday, completed) {
+  // 반환: { plan: {day→targetDate}, todayDays:[], delayedDays:[], status }
+  var TOTAL = CURRICULUM.length; // 11
+  var plan = {};
+  var today = new Date(); today.setHours(0,0,0,0);
+
+  if (dday <= 0) return { plan:{}, todayDays:[], delayedDays:[], status:'exam' };
+
+  // 완료 안 된 일차 목록
+  var remaining = [];
+  for (var i = 1; i <= TOTAL; i++) {
+    if (completed.indexOf(i) === -1) remaining.push(i);
+  }
+
+  // 모든 일차 완료 → 복습·모의고사 일정
+  if (remaining.length === 0) {
+    return { plan:{}, todayDays:[], delayedDays:[], status:'review', dday:dday };
+  }
+
+  // 남은 학습일 배정
+  // 시험 전 마지막 3일은 복습·모의고사 여유분으로 확보
+  var studyDays = Math.max(dday - 3, 1);
+  var perDay    = studyDays / remaining.length; // 일차당 배정 일수 (소수 가능)
+
+  remaining.forEach(function(day, idx) {
+    var offset = Math.round(idx * perDay);
+    var target = new Date(today);
+    target.setDate(target.getDate() + offset);
+    plan[day] = target;
+  });
+
+  // 오늘 해야 할 일차: target이 오늘 이하이면서 미완료
+  var todayDays = remaining.filter(function(day) {
+    return plan[day] <= today;
+  });
+
+  // 지연된 일차: target이 어제 이전 (오늘보다 전날)
+  var yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+  var delayedDays = remaining.filter(function(day) {
+    return plan[day] < today;
+  });
+
+  return { plan:plan, todayDays:todayDays, delayedDays:delayedDays, status:'progress' };
+}
+
+function renderScheduleBanner(schedule, dday) {
+  var banner = document.getElementById('scheduleBanner');
+  if (!banner) return;
+
+  var html = '';
+  if (schedule.status === 'exam') {
+    html = '<div class="schedule-banner exam">🎯 오늘이 시험 당일이에요! 최선을 다해요!</div>';
+  } else if (schedule.status === 'review') {
+    // 모두 완료, 남은 기간별 메시지
+    if (dday > 7) {
+      html = '<div class="schedule-banner ahead">🎉 11일차 완료! D-' + dday + ' — 복습과 모의고사로 실력을 다져요.</div>';
+    } else if (dday > 3) {
+      html = '<div class="schedule-banner today">⚡ D-' + dday + ' 시험 임박! 모의고사 반복 풀이에 집중하세요.</div>';
+    } else {
+      html = '<div class="schedule-banner today">🔥 D-' + dday + ' 마지막 점검! 요약 카드와 오답 노트를 확인하세요.</div>';
+    }
+  } else if (schedule.delayedDays.length > 0) {
+    html = '<div class="schedule-banner delayed">⚠️ ' + schedule.delayedDays.length + '개 일차가 일정보다 뒤처졌어요. 오늘 ' + schedule.todayDays.length + '일차를 완료해야 해요!</div>';
+  } else if (schedule.todayDays.length > 0) {
+    html = '<div class="schedule-banner today">📅 오늘의 목표: <span style="margin-left:4px;">' + schedule.todayDays.map(function(d){ return d + '일차'; }).join(', ') + ' 학습 완료</span></div>';
+  } else {
+    html = '<div class="schedule-banner ahead">🎉 일정보다 앞서가는 중이에요! 내일까지 여유가 있어요.</div>';
+  }
+
+  banner.innerHTML = html;
+  banner.style.display = html ? 'block' : 'none';
+}
+
+function getScheduleDayStatus(day, schedule) {
+  if (!schedule || schedule.status === 'review' || schedule.status === 'exam') return null;
+  if (!schedule.plan[day]) return null;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var target = schedule.plan[day];
+  var diff = Math.ceil((target - today) / 86400000);
+  if (diff < 0)  return 'delayed'; // 지연
+  if (diff === 0) return 'today';   // 오늘
+  return 'ahead';                   // 아직 여유
+}
+
 function renderMain() {
   var today = new Date(); today.setHours(0,0,0,0);
   var exam  = new Date(state.examDate); exam.setHours(0,0,0,0);
@@ -2609,10 +2723,14 @@ function renderMain() {
   document.getElementById('statLeft').textContent   = total - done;
   document.getElementById('statStreak').textContent = state.streak || 0;
 
+  // 학습 일정 계산 및 배너 표시
+  var schedule = calcSchedule(diff, state.completed);
+  renderScheduleBanner(schedule, diff);
+
   var list = document.getElementById('dayList');
   list.innerHTML = '';
   CURRICULUM.forEach(function(cur) {
-    list.appendChild(makeDayCard(cur));
+    list.appendChild(makeDayCard(cur, schedule));
   });
 
   // 복습 섹션 - 완료한 일차가 1개 이상이고 퀴즈 문제가 있을 때 표시
@@ -2644,13 +2762,14 @@ function renderMain() {
   }
 }
 
-function makeDayCard(cur) {
+function makeDayCard(cur, schedule) {
   var done      = state.completed.indexOf(cur.day) !== -1;
   var available = cur.available;
   var hasContent = !!CONTENT[cur.day];
-
-  // available이어도 콘텐츠 없으면 잠금 처리
   var isReady = available && hasContent;
+
+  // 일정 상태 계산
+  var schedStatus = (!done && schedule) ? getScheduleDayStatus(cur.day, schedule) : null;
 
   var card = document.createElement('div');
   card.className = 'day-card ' + (done ? 'completed' : isReady ? 'unlocked' : 'locked');
@@ -2679,6 +2798,20 @@ function makeDayCard(cur) {
 
   info.appendChild(lbl);
   info.appendChild(title);
+
+  // 일정 서브 뱃지 (오늘/지연/여유)
+  if (!done && schedStatus) {
+    var schedLbl = document.createElement('div');
+    schedLbl.style.cssText = 'font-size:10px;font-weight:700;margin-top:3px;';
+    if (schedStatus === 'today') {
+      schedLbl.textContent = '📅 오늘 목표';
+      schedLbl.style.color = '#f0a500';
+    } else if (schedStatus === 'delayed') {
+      schedLbl.textContent = '⚠️ 일정 지연';
+      schedLbl.style.color = 'var(--red)';
+    }
+    if (schedStatus !== 'ahead') info.appendChild(schedLbl);
+  }
 
   var badge = document.createElement('div');
   badge.className = 'day-badge ' + (done ? 'badge-done' : isReady ? 'badge-active' : 'badge-lock');
