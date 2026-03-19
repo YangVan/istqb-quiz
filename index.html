@@ -652,6 +652,9 @@ body {
   <!-- 학습 일정 배너 -->
   <div id="scheduleBanner" style="display:none;"></div>
 
+  <!-- 시험 직전 요약 배너 (D-7 이내 강조) -->
+  <div id="summaryBanner" style="display:none;"></div>
+
   <!-- 학습 캘린더 -->
   <div id="calendarSection" style="display:none;padding:0 20px 4px;">
     <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;padding:14px 16px;">
@@ -671,6 +674,19 @@ body {
           <span style="font-size:10px;color:var(--text2);">오늘</span>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="section-title">핵심 요약 카드</div>
+  <div style="padding:0 20px 4px;">
+    <div class="review-card" onclick="showSummaryScreen()"
+      style="background:linear-gradient(135deg,#1a1a3a,#2d1f00);border:1px solid rgba(240,165,0,0.4);">
+      <div class="review-icon" style="background:rgba(240,165,0,0.12);border:1px solid rgba(240,165,0,0.4);">&#128218;</div>
+      <div class="review-info">
+        <div class="review-title" style="color:#fff;">ISTQB FL 핵심 요약</div>
+        <div class="review-desc" style="color:rgba(240,165,0,0.9);">Ch.1~6 핵심 암기 포인트 한눈에 보기</div>
+      </div>
+      <div class="review-arrow" style="color:rgba(240,165,0,0.9);">&#8250;</div>
     </div>
   </div>
 
@@ -811,6 +827,16 @@ body {
     <div id="mockReviewContent"></div>
     <button onclick="goMain()" style="margin-top:16px;width:100%;padding:13px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;border:none;background:var(--accent);color:#0D1117;cursor:pointer;">홈으로</button>
   </div>
+</div>
+
+<!-- ── SUMMARY SCREEN ── -->
+<div id="summaryScreen" class="screen">
+  <div class="quiz-topbar">
+    <div class="back-btn" onclick="goMain()">&#8592;</div>
+    <div style="flex:1;text-align:center;font-size:15px;font-weight:800;color:var(--text);">핵심 요약 카드</div>
+    <div class="home-btn" onclick="goMain()" title="홈으로">&#8962;</div>
+  </div>
+  <div id="summaryContent" style="padding:14px 20px 80px;"></div>
 </div>
 
 <!-- ── MOCK HISTORY SCREEN ── -->
@@ -2395,13 +2421,49 @@ var MOCK_QUIZ = [
 var state = {
   nickname: '',
   examDate: null,
-  completed: [],
+  completed: [],  // [{day: N, date: 'YYYY-MM-DD'}] 구조
   streak: 0,
   lastStudyDate: null,
   wrongNotes: [],
   mockHistory: [],
   studyLog: [],
 };
+
+/* completed 헬퍼 함수 */
+function completedDays() {
+  // 구버전(숫자 배열) + 신버전(객체 배열) 모두 호환
+  return (state.completed || []).map(function(c) {
+    return typeof c === 'object' ? c.day : c;
+  });
+}
+function isDayCompleted(day) {
+  return completedDays().indexOf(day) !== -1;
+}
+function getCompletedDate(day) {
+  var item = (state.completed || []).find(function(c) {
+    return (typeof c === 'object' ? c.day : c) === day;
+  });
+  if (!item) return null;
+  return typeof item === 'object' ? item.date : null;
+}
+
+/* 구버전 completed 마이그레이션 (숫자 배열 → 객체 배열) */
+function migrateCompleted() {
+  if (!state.completed || state.completed.length === 0) return;
+  // 이미 신버전이면 스킵
+  if (typeof state.completed[0] === 'object') return;
+
+  var todayStr = new Date().toISOString().split('T')[0];
+  state.completed = state.completed.map(function(day) {
+    return { day: day, date: todayStr };
+  });
+  // studyLog에도 오늘 날짜 등록
+  if (!state.studyLog) state.studyLog = [];
+  if (state.studyLog.indexOf(todayStr) === -1) {
+    state.studyLog.push(todayStr);
+  }
+  save();
+}
 var currentDay = 1;
 var quizAnswered = 0, quizCorrect = 0;
 var LTRS = ['A','B','C','D'];
@@ -2450,6 +2512,7 @@ window.onload = function() {
 
   if (session && session.nick && session.expiry > Date.now() && profiles[session.nick]) {
     state = profiles[session.nick];
+    migrateCompleted();
     localStorage.setItem(CURRENT_KEY, session.nick);
     var today = new Date(); today.setHours(0,0,0,0);
     var exam  = new Date(state.examDate); exam.setHours(0,0,0,0);
@@ -2486,7 +2549,7 @@ function renderSetup() {
     list.innerHTML = '';
     nicks.forEach(function(nick) {
       var p = profiles[nick];
-      var done = (p.completed || []).length;
+      var done = (p.completed || []).map(function(c){ return typeof c==='object'?c.day:c; }).length;
       var exam = p.examDate ? new Date(p.examDate) : null;
       var today = new Date(); today.setHours(0,0,0,0);
       var dday = exam ? Math.ceil((exam - today) / 86400000) : '?';
@@ -2610,6 +2673,7 @@ function verifyLogin(pin) {
   if (!p) return;
   if (p.pin === hashPin(pin)) {
     state = p;
+    migrateCompleted();
     localStorage.setItem(CURRENT_KEY, loginTarget);
     issueSession(loginTarget);
     var today = new Date(); today.setHours(0,0,0,0);
@@ -2732,7 +2796,12 @@ function calMove(dir) {
 function renderCalendar() {
   if (calYear === 0) initCalendar();
 
-  var log      = state.studyLog || [];
+  // studyLog + completed 날짜 모두 수집
+  var log = (state.studyLog || []).slice();
+  (state.completed || []).forEach(function(c) {
+    var date = typeof c === 'object' ? c.date : null;
+    if (date && log.indexOf(date) === -1) log.push(date);
+  });
   var todayStr = new Date().toISOString().split('T')[0];
   var examStr  = state.examDate ? state.examDate.split('T')[0] : null;
 
@@ -2807,13 +2876,15 @@ function calcSchedule(dday, completed) {
   var TOTAL = CURRICULUM.length; // 11
   var plan = {};
   var today = new Date(); today.setHours(0,0,0,0);
+  // 호환: 숫자 배열 또는 객체 배열 모두 처리
+  var completedNums = (completed || []).map(function(c){ return typeof c==='object'?c.day:c; });
 
   if (dday <= 0) return { plan:{}, todayDays:[], delayedDays:[], status:'exam' };
 
   // 완료 안 된 일차 목록
   var remaining = [];
   for (var i = 1; i <= TOTAL; i++) {
-    if (completed.indexOf(i) === -1) remaining.push(i);
+    if (completedNums.indexOf(i) === -1) remaining.push(i);
   }
 
   // 모든 일차 완료 → 복습·모의고사 일정
@@ -2901,7 +2972,7 @@ function renderMain() {
     (hour < 12 ? '좋은 아침이에요!' : hour < 18 ? '오늘도 화이팅!' : '오늘 학습 잊지 마세요!');
   document.getElementById('heroGreet').textContent = greet;
 
-  var done = state.completed.length;
+  var done = completedDays().length;
   var total = CURRICULUM.length;
   document.getElementById('progressText').textContent = done + ' / ' + total + '일차';
   document.getElementById('progressFill').style.width = Math.round(done/total*100) + '%';
@@ -2911,7 +2982,7 @@ function renderMain() {
 
   // 학습 캘린더 — 완료 일차 1개 이상 시 노출
   var calSection = document.getElementById('calendarSection');
-  if (state.completed.length > 0) {
+  if (completedDays().length > 0) {
     calSection.style.display = 'block';
     renderCalendar();
   } else {
@@ -2922,6 +2993,9 @@ function renderMain() {
   var schedule = calcSchedule(diff, state.completed);
   renderScheduleBanner(schedule, diff);
 
+  // 시험 직전 요약 배너 (D-7 이내 강조)
+  renderSummaryBanner(diff);
+
   var list = document.getElementById('dayList');
   list.innerHTML = '';
   CURRICULUM.forEach(function(cur) {
@@ -2929,7 +3003,7 @@ function renderMain() {
   });
 
   // 복습 섹션 - 완료한 일차가 1개 이상이고 퀴즈 문제가 있을 때 표시
-  var reviewableDays = state.completed.filter(function(d){ return !!QUIZ[d]; });
+  var reviewableDays = completedDays().filter(function(d){ return !!QUIZ[d]; });
   var totalReviewQ = reviewableDays.reduce(function(acc, d){ return acc + QUIZ[d].length; }, 0);
   var reviewSection = document.getElementById('reviewSection');
   var reviewSectionTitle = document.getElementById('reviewSectionTitle');
@@ -2945,7 +3019,7 @@ function renderMain() {
   }
 
   // 모의고사 섹션 — 11일차 모두 완료 시 노출
-  var allDone = state.completed.length >= CURRICULUM.length;
+  var allDone = completedDays().length >= CURRICULUM.length;
   var mockSection = document.getElementById('mockSection');
   var mockSectionTitle = document.getElementById('mockSectionTitle');
   if (allDone) {
@@ -2973,7 +3047,7 @@ function renderMain() {
 }
 
 function makeDayCard(cur, schedule) {
-  var done      = state.completed.indexOf(cur.day) !== -1;
+  var done      = isDayCompleted(cur.day);
   var available = cur.available;
   var hasContent = !!CONTENT[cur.day];
   var isReady = available && hasContent;
@@ -3036,14 +3110,14 @@ function makeDayCard(cur, schedule) {
 
 function openDay(day) {
   var cur = CURRICULUM.find(function(c){ return c.day === day; });
-  if (!cur || (!cur.available && state.completed.indexOf(day) === -1)) return;
+  if (!cur || (!cur.available && !isDayCompleted(day))) return;
   currentDay = day;
   document.getElementById('studyTopTitle').textContent = 'Day ' + day;
   document.getElementById('studyDayLabel').textContent = cur.chapter + '  |  DAY ' + day;
   document.getElementById('studyTitle').textContent    = cur.title;
   document.getElementById('studyChapter').textContent  = cur.chapter;
 
-  var isDone = state.completed.indexOf(day) !== -1;
+  var isDone = isDayCompleted(day);
   var btn = document.getElementById('completeBtn');
   btn.textContent = isDone ? '이미 완료한 일차예요' : '다 읽었어요 - 문제 풀기';
   btn.disabled = isDone;
@@ -3135,7 +3209,7 @@ function startReview(limit) {
 
   // 완료한 일차의 모든 문제 수집 후 셔플
   var allQ = [];
-  state.completed.forEach(function(d) {
+  completedDays().forEach(function(d) {
     if (QUIZ[d]) {
       QUIZ[d].forEach(function(q) {
         allQ.push({ q: q, day: d });
@@ -3153,7 +3227,7 @@ function startReview(limit) {
   reviewAnswered = 0; reviewCorrect = 0;
 
   // 타이틀 & 배지
-  var days = state.completed.filter(function(d){ return !!QUIZ[d]; });
+  var days = completedDays().filter(function(d){ return !!QUIZ[d]; });
   var isShort = reviewLimit > 0;
   document.getElementById('reviewScreenTitle').textContent = isShort ? '빠른 복습 (10문제)' : '전체 복습';
   document.getElementById('reviewBadge').textContent =
@@ -3597,6 +3671,130 @@ function showMockHistory() {
   showScreen('mockHistoryScreen');
 }
 
+/* ══════════════════════════════
+   SUMMARY CARD (핵심 요약 카드)
+══════════════════════════════ */
+var SUMMARY_DATA = [
+  {
+    ch: 'Ch.1', title: '테스팅 기초',
+    color: '#185fa5', bg: '#1a2d4a',
+    points: [
+      '테스팅 7원리 암기 — ①결함존재 ②완벽불가 ③조기시작 ④결함집중 ⑤살충제역설 ⑥상황의존 ⑦오류부재오류',
+      '오류(Error) → 결함(Defect) → 장애(Failure) 순서',
+      '정적 테스팅 = 실행 없이 결함 발견 / 동적 테스팅 = 실행 후 결함 발견',
+      '테스팅 ≠ 디버깅 — 테스팅은 결함 발견, 디버깅은 결함 제거',
+    ]
+  },
+  {
+    ch: 'Ch.2', title: 'SDLC · 테스트 레벨',
+    color: '#3b6d11', bg: '#1a2d1a',
+    points: [
+      'V모델: 요구사항↔인수 / 시스템설계↔시스템 / 상위설계↔통합 / 상세설계↔컴포넌트',
+      '하향식↓ = Stub(하위 대체) / 상향식↑ = Driver(상위 대체)',
+      '리그레션 테스팅 = 변경 후 기존 기능 정상 여부 확인 → 자동화 최적',
+      '알파(개발 환경) vs 베타(실제 고객 환경) — 수행 환경이 핵심 차이',
+    ]
+  },
+  {
+    ch: 'Ch.3', title: '정적 테스팅',
+    color: '#7a4f00', bg: '#2d1f00',
+    points: [
+      '리뷰 유형 공식성 순서: 비공식 < 워크스루 < 기술리뷰 < 인스펙션',
+      '인스펙션 = Moderator 주도, 입·출구 기준, 결함 통계 수집 (가장 공식적)',
+      '워크스루 = 작성자(Author) 주도, 교육 목적, 비교적 비공식',
+      '리뷰 프로세스 5단계: 계획 → 개시 → 개별검토 → 검토회의 → 수정·후속조치',
+    ]
+  },
+  {
+    ch: 'Ch.4', title: '테스트 기법',
+    color: '#6b3a9e', bg: '#2a1a3a',
+    points: [
+      'EP: 파티션 내 대표값 / BVA: 경계-1, 경계, 경계+1 (3값) 테스트',
+      '결정 테이블: 조건 조합별 행동 정의 / 상태 전이: 상태 변화 워크플로',
+      '결정 커버리지 100% → 구문 커버리지 100% 보장 (반대는 X)',
+      '탐색적 = 학습·설계·실행 동시 / 오류추측 = 경험 기반 취약점 집중',
+    ]
+  },
+  {
+    ch: 'Ch.5', title: '테스트 관리',
+    color: '#8f2020', bg: '#2d1a1a',
+    points: [
+      '리스크 수준 = 가능성(Likelihood) × 영향도(Impact)',
+      '제품 리스크 = 품질 문제 / 프로젝트 리스크 = 관리 문제',
+      '진입(Entry) = 시작 조건 / 종료(Exit) = 완료 조건',
+      '결함 생명주기: New → Open → Fixed → Closed (남으면 Reopened)',
+      '진행 보고서 = 테스팅 중 주기적 / 요약 보고서 = 완료 후 최종',
+    ]
+  },
+  {
+    ch: 'Ch.6', title: '테스트 도구',
+    color: '#0f6e56', bg: '#1a2d28',
+    points: [
+      '자동화 최적: 리그레션 테스팅 / 자동화 불가: 탐색적·사용성 테스팅',
+      '자동화 리스크: 초기 비용 과소평가, 스크립트 유지보수 비용',
+      '정적 분석 도구 = 코드 실행 없이 결함 검출 (SonarQube, ESLint)',
+      '도구 도입 순서: 필요성 분석 → 선정 → 파일럿 → 전사 도입 → 유지보수',
+    ]
+  },
+];
+
+function renderSummaryBanner(dday) {
+  var el = document.getElementById('summaryBanner');
+  if (!el) return;
+  if (dday <= 0) { el.style.display = 'none'; return; }
+
+  var html = '';
+  if (dday <= 3) {
+    html = '<div class="schedule-banner" style="background:#3a1a1a;color:#f85149;border:1px solid rgba(248,81,73,0.5);margin:0 20px 8px;cursor:pointer;" onclick="showSummaryScreen()">' +
+      '🔥 D-' + dday + ' 시험 임박! 핵심 요약 카드로 마지막 점검하세요 →</div>';
+  } else if (dday <= 7) {
+    html = '<div class="schedule-banner today" style="margin:0 20px 8px;cursor:pointer;" onclick="showSummaryScreen()">' +
+      '⚡ D-' + dday + ' 시험이 얼마 안 남았어요! 핵심 요약 카드 확인하세요 →</div>';
+  }
+  el.innerHTML = html;
+  el.style.display = html ? 'block' : 'none';
+}
+
+function showSummaryScreen() {
+  var content = document.getElementById('summaryContent');
+  if (!content) return;
+
+  var html = '';
+
+  // 상단 안내
+  html += '<div style="background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.3);border-radius:12px;padding:12px 14px;margin-bottom:16px;">';
+  html += '<div style="font-size:12px;color:#f0a500;font-weight:700;margin-bottom:4px;">💡 시험 직전 핵심 암기 포인트</div>';
+  html += '<div style="font-size:11px;color:var(--text2);line-height:1.6;">각 챕터의 자주 출제되는 핵심 개념만 모았어요. 시험 전날 빠르게 훑어보세요.</div>';
+  html += '</div>';
+
+  SUMMARY_DATA.forEach(function(ch) {
+    html += '<div style="background:' + ch.bg + ';border:1px solid ' + ch.color + '44;border-radius:14px;padding:14px 16px;margin-bottom:12px;">';
+    // 챕터 헤더
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">';
+    html += '<div style="background:' + ch.color + ';color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:10px;">' + ch.ch + '</div>';
+    html += '<div style="font-size:14px;font-weight:800;color:#fff;">' + ch.title + '</div>';
+    html += '</div>';
+    // 포인트 목록
+    ch.points.forEach(function(pt) {
+      html += '<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:7px;">';
+      html += '<div style="width:5px;height:5px;min-width:5px;border-radius:50%;background:' + ch.color + ';margin-top:6px;"></div>';
+      html += '<div style="font-size:12px;color:rgba(255,255,255,0.88);line-height:1.65;">' + pt + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+
+  // 하단 응원 메시지
+  html += '<div style="text-align:center;padding:16px 0;">';
+  html += '<div style="font-size:24px;margin-bottom:8px;">🎯</div>';
+  html += '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px;">준비된 자에게 행운은 따라온다</div>';
+  html += '<div style="font-size:12px;color:var(--text2);">지금까지 쌓아온 실력을 믿으세요!</div>';
+  html += '</div>';
+
+  content.innerHTML = html;
+  showScreen('summaryScreen');
+}
+
 var toastTimer = null;
 function showToast(msg) {
   var t = document.getElementById('toast');
@@ -3721,26 +3919,25 @@ function retryQuiz() {
 }
 
 function finishDay() {
-  if (state.completed.indexOf(currentDay) === -1) {
-    state.completed.push(currentDay);
+  if (!isDayCompleted(currentDay)) {
+    var todayStr = new Date().toISOString().split('T')[0];
+
+    // 신규 구조로 저장
+    state.completed.push({ day: currentDay, date: todayStr });
 
     // 날짜 기반 streak 계산
-    var todayStr = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
     var last = state.lastStudyDate;
     if (!last) {
-      // 첫 학습
       state.streak = 1;
     } else {
       var lastDate  = new Date(last);  lastDate.setHours(0,0,0,0);
       var todayDate = new Date(todayStr); todayDate.setHours(0,0,0,0);
       var diffDays  = Math.round((todayDate - lastDate) / 86400000);
       if (diffDays === 1) {
-        // 어제 공부 → 연속!
         state.streak = (state.streak || 0) + 1;
       } else if (diffDays === 0) {
-        // 오늘 이미 다른 일차 완료 → streak 유지 (중복 증가 방지)
+        // 오늘 이미 다른 일차 완료 → streak 유지
       } else {
-        // 하루 이상 빠짐 → 리셋
         state.streak = 1;
       }
     }
@@ -3752,7 +3949,7 @@ function finishDay() {
       state.studyLog.push(todayStr);
     }
 
-    // 다음 일차가 콘텐츠가 있을 때만 unlock
+    // 다음 일차 unlock
     var next = CURRICULUM.find(function(c){ return c.day === currentDay + 1; });
     if (next && CONTENT[currentDay + 1]) next.available = true;
     save();
