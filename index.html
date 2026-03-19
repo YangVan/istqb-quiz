@@ -684,8 +684,46 @@ body {
     </div>
   </div>
 
+  <div class="section-title" id="wrongNoteSectionTitle" style="display:none">오답 노트</div>
+  <div id="wrongNoteSection" style="display:none;padding:0 20px 4px;">
+    <div class="review-card" onclick="startWrongNote()" id="wrongNoteCard">
+      <div class="review-icon" style="background:rgba(248,81,73,0.12);border:1px solid rgba(248,81,73,0.3);">&#x1F4DD;</div>
+      <div class="review-info">
+        <div class="review-title">오답 노트 복습</div>
+        <div class="review-desc" id="wrongNoteDesc">틀린 문제 0개</div>
+      </div>
+      <div class="review-arrow">&#8250;</div>
+    </div>
+  </div>
+
   <div class="section-title">CURRICULUM</div>
   <div class="day-list" id="dayList"></div>
+</div>
+
+<!-- ── WRONG NOTE SCREEN ── -->
+<div id="wrongNoteScreen" class="screen">
+  <div class="quiz-topbar">
+    <div class="back-btn" onclick="goMain()">&#8592;</div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="wrongProgFill" style="width:0%"></div></div>
+    <div class="quiz-count" id="wrongCount">0/0</div>
+    <div class="home-btn" onclick="goMain()" title="홈으로">&#8962;</div>
+  </div>
+  <div style="padding:14px 20px 4px;">
+    <div style="font-size:15px;font-weight:800;color:var(--text);">오답 노트</div>
+    <div style="font-size:12px;color:var(--text2);margin-top:2px;">정답을 맞히면 자동으로 제거돼요</div>
+  </div>
+  <div class="quiz-content" id="wrongContent"></div>
+  <div class="quiz-result" id="wrongResult">
+    <div style="font-size:36px;margin-bottom:12px;">&#127881;</div>
+    <div style="font-size:16px;font-weight:800;color:var(--text);">오답 노트 완료!</div>
+    <div class="result-score" id="wrongResultScore"></div>
+    <div class="result-pct"   id="wrongResultPct"></div>
+    <div class="result-msg"   id="wrongResultMsg"></div>
+    <div class="result-btns">
+      <button class="result-btn btn-retry"  onclick="startWrongNote()">다시 풀기</button>
+      <button class="result-btn btn-finish" onclick="goMain()">홈으로</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── MOCK EXAM SCREEN ── -->
@@ -2305,6 +2343,7 @@ var state = {
   examDate: null,
   completed: [],
   streak: 0,
+  wrongNotes: [],
 };
 var currentDay = 1;
 var quizAnswered = 0, quizCorrect = 0;
@@ -2604,7 +2643,7 @@ function startStudy() {
   var today = new Date(); today.setHours(0,0,0,0);
   if (exam <= today) return alert('시험일은 오늘 이후여야 해요!');
 
-  state = { nickname: nick, pin: hashPin(pin), examDate: val, completed: [], streak: 0 };
+  state = { nickname: nick, pin: hashPin(pin), examDate: val, completed: [], streak: 0, wrongNotes: [] };
   save();
   issueSession(nick);
   showScreen('mainScreen');
@@ -2760,6 +2799,20 @@ function renderMain() {
   } else {
     mockSection.style.display = 'none';
     mockSectionTitle.style.display = 'none';
+  }
+
+  // 오답 노트 섹션 — 오답이 1개 이상일 때 노출
+  var notes = state.wrongNotes || [];
+  var wrongSection      = document.getElementById('wrongNoteSection');
+  var wrongSectionTitle = document.getElementById('wrongNoteSectionTitle');
+  var wrongDesc         = document.getElementById('wrongNoteDesc');
+  if (notes.length > 0) {
+    wrongSection.style.display      = 'block';
+    wrongSectionTitle.style.display = 'block';
+    wrongDesc.textContent = '틀린 문제 ' + notes.length + '개 · 다시 도전해보세요';
+  } else {
+    wrongSection.style.display      = 'none';
+    wrongSectionTitle.style.display = 'none';
   }
 }
 
@@ -3014,7 +3067,12 @@ function makeReviewCard(q, i, day, total) {
     ltr.className = 'opt-ltr'; ltr.textContent = LTRS[oi];
     var sp = document.createElement('span'); sp.textContent = o;
     btn.appendChild(ltr); btn.appendChild(sp);
-    btn.addEventListener('click', function() { chooseReviewOpt(i, oi, opts, newAns, q.ex, total); });
+    btn.addEventListener('click', (function(capturedOi) {
+      return function() {
+        chooseReviewOpt(i, capturedOi, opts, newAns, q.ex, total,
+          { q: q.q, opts: shuffledOpts, ans: newAns, ex: q.ex }, day);
+      };
+    })(oi));
     opts.appendChild(btn);
   });
   card.appendChild(opts);
@@ -3025,7 +3083,7 @@ function makeReviewCard(q, i, day, total) {
   return card;
 }
 
-function chooseReviewOpt(qi, oi, optsEl, ans, ex, total) {
+function chooseReviewOpt(qi, oi, optsEl, ans, ex, total, qObj, day) {
   var btns = optsEl.querySelectorAll('.quiz-opt');
   if (btns[0].classList.contains('disabled')) return;
   for (var k = 0; k < btns.length; k++) btns[k].classList.add('disabled');
@@ -3035,7 +3093,13 @@ function chooseReviewOpt(qi, oi, optsEl, ans, ex, total) {
   var fb = document.getElementById('rfb' + qi);
   fb.className = 'quiz-fb ' + (isC ? 'sc' : 'sw');
   fb.innerHTML = '<strong>' + (isC ? '정답!' : '오답') + '</strong>' + ex;
-  reviewAnswered++; if (isC) reviewCorrect++;
+  reviewAnswered++;
+  if (isC) {
+    reviewCorrect++;
+    if (qObj) removeWrongNote(makeWrongKey('review', day || 0, qObj.q));
+  } else {
+    if (qObj) addWrongNote('review', day || 0, qObj);
+  }
   updateReviewProgress();
   if (reviewAnswered === total) setTimeout(showReviewResult, 600);
 }
@@ -3058,6 +3122,165 @@ function showReviewResult() {
                 '정리본을 다시 읽고 재도전해 보세요!';
   document.getElementById('reviewResult').style.display = 'block';
   document.getElementById('reviewResult').scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ══════════════════════════════
+   WRONG NOTE (오답 노트)
+══════════════════════════════ */
+function makeWrongKey(source, day, q) {
+  // 문제를 식별하는 고유 키 (출처 + 일차 + 문제 앞 20자)
+  return source + '_' + day + '_' + (q || '').slice(0, 20);
+}
+
+function addWrongNote(source, day, qObj) {
+  if (!state.wrongNotes) state.wrongNotes = [];
+  var key = makeWrongKey(source, day, qObj.q);
+  var existing = state.wrongNotes.findIndex(function(n) { return n.key === key; });
+  var note = {
+    key:     key,
+    source:  source,   // 'quiz' | 'review' | 'mock'
+    day:     day,
+    q:       qObj.q,
+    opts:    qObj.opts,
+    ans:     qObj.ans,
+    ex:      qObj.ex,
+    wrongAt: Date.now()
+  };
+  if (existing >= 0) {
+    state.wrongNotes[existing] = note; // 중복이면 시간만 업데이트
+  } else {
+    state.wrongNotes.push(note);
+  }
+  save();
+}
+
+function removeWrongNote(key) {
+  if (!state.wrongNotes) return;
+  state.wrongNotes = state.wrongNotes.filter(function(n) { return n.key !== key; });
+  save();
+}
+
+/* ── 오답 노트 화면 ── */
+var wrongNoteList  = [];
+var wrongNoteIdx   = 0;
+var wrongNoteRight = 0;
+var wrongNoteTotal = 0;
+
+function startWrongNote() {
+  var notes = state.wrongNotes || [];
+  if (notes.length === 0) { showToast('오답 노트가 비어있어요!'); return; }
+
+  // Fisher-Yates 셔플
+  wrongNoteList = notes.slice();
+  for (var i = wrongNoteList.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = wrongNoteList[i]; wrongNoteList[i] = wrongNoteList[j]; wrongNoteList[j] = t;
+  }
+
+  wrongNoteIdx   = 0;
+  wrongNoteRight = 0;
+  wrongNoteTotal = wrongNoteList.length;
+
+  document.getElementById('wrongResult').style.display  = 'none';
+  document.getElementById('wrongContent').style.display = 'block';
+  renderWrongQ(0);
+  showScreen('wrongNoteScreen');
+}
+
+function renderWrongQ(idx) {
+  wrongNoteIdx = idx;
+  var note  = wrongNoteList[idx];
+  var total = wrongNoteList.length;
+  var LTRS  = ['A','B','C','D'];
+
+  document.getElementById('wrongProgFill').style.width =
+    Math.round((idx / total) * 100) + '%';
+  document.getElementById('wrongCount').textContent = (idx + 1) + '/' + total;
+
+  var sourceLabel = note.source === 'mock' ? '모의고사'
+    : note.source === 'review' ? '복습 (' + note.day + '일차)'
+    : note.day + '일차';
+
+  var html = '<div style="padding:14px 18px 100px;">';
+  html += '<div style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:rgba(248,81,73,0.12);color:var(--red);border:1px solid rgba(248,81,73,0.3);display:inline-block;margin-bottom:10px;">';
+  html += '📝 출처: ' + sourceLabel + '</div>';
+  html += '<div style="font-size:14px;font-weight:700;color:var(--text);line-height:1.7;margin-bottom:16px;white-space:pre-wrap;">' + note.q + '</div>';
+
+  note.opts.forEach(function(opt, oi) {
+    html += '<div id="wrongOpt' + oi + '" onclick="selectWrongOpt(' + idx + ',' + oi + ')" ';
+    html += 'style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:10px;';
+    html += 'background:var(--bg3);border:1.5px solid var(--border);margin-bottom:8px;cursor:pointer;word-break:keep-all;">';
+    html += '<div style="width:24px;height:24px;min-width:24px;border-radius:6px;background:var(--bg2);';
+    html += 'display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text2);margin-top:1px;">' + LTRS[oi] + '</div>';
+    html += '<span style="font-size:13.5px;color:var(--text);line-height:1.6;">' + opt + '</span>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  document.getElementById('wrongContent').innerHTML = html;
+}
+
+function selectWrongOpt(idx, oi) {
+  var note  = wrongNoteList[idx];
+  var LTRS  = ['A','B','C','D'];
+  var isRight = (oi === note.ans);
+
+  // 보기 색상 표시
+  note.opts.forEach(function(opt, i) {
+    var el = document.getElementById('wrongOpt' + i);
+    if (!el) return;
+    if (i === note.ans) {
+      el.style.background = 'var(--lgreen)';
+      el.style.borderColor = 'var(--green)';
+      el.querySelector('div').style.background = 'var(--green)';
+      el.querySelector('div').style.color = '#fff';
+    } else if (i === oi && !isRight) {
+      el.style.background = '#3a1a1a';
+      el.style.borderColor = 'var(--red)';
+      el.querySelector('div').style.background = 'var(--red)';
+      el.querySelector('div').style.color = '#fff';
+    }
+    el.style.cursor = 'default';
+    el.onclick = null;
+  });
+
+  // 해설 추가
+  var content = document.getElementById('wrongContent');
+  var ex = document.createElement('div');
+  ex.style.cssText = 'margin:8px 18px 0;padding:10px 14px;border-radius:10px;background:rgba(88,166,255,0.08);border-left:3px solid var(--accent);';
+  ex.innerHTML = '<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px;">' +
+    (isRight ? '✅ 정답이에요!' : '❌ 오답') + '</div>' +
+    '<div style="font-size:12px;color:var(--text);line-height:1.6;">' + note.ex + '</div>';
+  content.querySelector('div').appendChild(ex);
+
+  // 정답이면 오답 노트에서 제거, 오답이면 wrongAt 갱신
+  if (isRight) {
+    wrongNoteRight++;
+    removeWrongNote(note.key);
+  } else {
+    addWrongNote(note.source, note.day, { q: note.q, opts: note.opts, ans: note.ans, ex: note.ex });
+  }
+
+  // 다음 문제로 자동 이동
+  setTimeout(function() {
+    if (wrongNoteIdx + 1 < wrongNoteTotal) {
+      renderWrongQ(wrongNoteIdx + 1);
+    } else {
+      showWrongResult();
+    }
+  }, 1400);
+}
+
+function showWrongResult() {
+  document.getElementById('wrongContent').style.display = 'none';
+  var pct = wrongNoteTotal > 0 ? Math.round(wrongNoteRight / wrongNoteTotal * 100) : 0;
+  document.getElementById('wrongResultScore').textContent = wrongNoteRight + ' / ' + wrongNoteTotal;
+  document.getElementById('wrongResultPct').textContent   = '정답률 ' + pct + '%';
+  var msg = pct === 100 ? '🎉 모든 오답을 극복했어요! 오답 노트가 비워졌어요.' :
+            pct >= 70  ? '잘 하고 있어요! 남은 오답을 계속 복습해요.' :
+                         '조금 더 복습이 필요해요. 다시 도전해보세요!';
+  document.getElementById('wrongResultMsg').textContent = msg;
+  document.getElementById('wrongResult').style.display = 'flex';
 }
 
 var toastTimer = null;
@@ -3142,7 +3365,15 @@ function chooseOpt(qi, oi, optsEl, q, total) {
   fb.className = 'quiz-fb ' + (isC ? 'sc' : 'sw');
   fb.innerHTML = '<strong>' + (isC ? '정답!' : '오답') + '</strong>' + q.ex;
   quizAnswered++;
-  if (isC) quizCorrect++;
+  if (isC) {
+    quizCorrect++;
+    // 정답 맞히면 오답 노트에서 제거
+    var key = makeWrongKey('quiz', currentDay, q.q);
+    removeWrongNote(key);
+  } else {
+    // 오답이면 오답 노트에 저장
+    addWrongNote('quiz', currentDay, q);
+  }
   updateQuizProgress();
   if (quizAnswered === total) setTimeout(showQuizResult, 600);
 }
@@ -3381,7 +3612,13 @@ function submitMock() {
 
   mockQuestions.forEach(function(q, i) {
     var isC = mockAnswers[i] === q.ans;
-    if (isC) correct++;
+    if (isC) {
+      correct++;
+      removeWrongNote(makeWrongKey('mock', 0, q.q));
+    } else {
+      // 미답(null)도 오답으로 처리
+      addWrongNote('mock', 0, q);
+    }
     chStats[q.ch].total++;
     if (isC) chStats[q.ch].correct++;
   });
