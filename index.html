@@ -704,8 +704,8 @@ body {
     <div class="review-card" id="reviewCard10" onclick="startReview(10)" style="margin-bottom:10px;">
       <div class="review-icon">&#x26A1;</div>
       <div class="review-info">
-        <div class="review-title">빠른 복습  &nbsp;<span style="font-size:11px;font-weight:700;color:var(--accent);background:rgba(88,166,255,0.12);border:1px solid rgba(88,166,255,0.3);border-radius:20px;padding:2px 8px;">10문제</span></div>
-        <div class="review-desc">랜덤 10문제 · 빠르게 핵심만 체크</div>
+        <div class="review-title">빠른 복습 <span style="font-size:11px;font-weight:700;color:var(--accent);background:rgba(88,166,255,0.12);border:1px solid rgba(88,166,255,0.3);border-radius:20px;padding:2px 8px;">랜덤 10문제</span></div>
+        <div class="review-desc" id="reviewDescShort">출제 강의 기준 : -</div>
       </div>
       <div class="review-arrow">&#8250;</div>
     </div>
@@ -3149,7 +3149,10 @@ function renderMain() {
   if (reviewableDays.length > 0) {
     reviewSection.style.display = 'block';
     reviewSectionTitle.style.display = 'block';
-    reviewDesc.textContent = '총 ' + reviewableDays.length + '개 강의 완료 · ' + totalReviewQ + '문제';
+    var dayLabels = reviewableDays.map(function(d){ return d + '강'; }).join(' · ');
+    reviewDesc.textContent = dayLabels + ' · 총 ' + totalReviewQ + '문제';
+    var shortDesc = document.getElementById('reviewDescShort');
+    if (shortDesc) shortDesc.textContent = '출제 강의 기준 : ' + dayLabels;
   } else {
     reviewSection.style.display = 'none';
     reviewSectionTitle.style.display = 'none';
