@@ -3140,7 +3140,7 @@ function renderMain() {
   });
 
   // 복습 섹션 - 완료한 일차가 1개 이상이고 퀴즈 문제가 있을 때 표시
-  var reviewableDays = completedDays().filter(function(d){ return !!QUIZ[d]; });
+  var reviewableDays = completedDays().filter(function(d){ return !!QUIZ[d]; }).sort(function(a,b){ return a-b; });
   var totalReviewQ = reviewableDays.reduce(function(acc, d){ return acc + QUIZ[d].length; }, 0);
   var reviewSection = document.getElementById('reviewSection');
   var reviewSectionTitle = document.getElementById('reviewSectionTitle');
