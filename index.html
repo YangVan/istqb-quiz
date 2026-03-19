@@ -713,6 +713,13 @@ body {
     <div style="font-size:12px;color:var(--text2);margin-top:2px;">정답을 맞히면 자동으로 제거돼요</div>
   </div>
   <div class="quiz-content" id="wrongContent"></div>
+  <!-- 하단 이동 버튼 (답 선택 후 노출) -->
+  <div id="wrongFooter" style="display:none;padding:12px 20px;border-top:1px solid var(--border);background:var(--bg2);">
+    <button id="wrongNextBtn" onclick="wrongNext()"
+      style="width:100%;padding:14px;border-radius:12px;font-family:inherit;font-size:15px;font-weight:800;border:none;background:var(--accent);color:#0D1117;cursor:pointer;">
+      다음 문제 →
+    </button>
+  </div>
   <div class="quiz-result" id="wrongResult">
     <div style="font-size:36px;margin-bottom:12px;">&#127881;</div>
     <div style="font-size:16px;font-weight:800;color:var(--text);">오답 노트 완료!</div>
@@ -2343,6 +2350,7 @@ var state = {
   examDate: null,
   completed: [],
   streak: 0,
+  lastStudyDate: null,
   wrongNotes: [],
 };
 var currentDay = 1;
@@ -2643,7 +2651,7 @@ function startStudy() {
   var today = new Date(); today.setHours(0,0,0,0);
   if (exam <= today) return alert('시험일은 오늘 이후여야 해요!');
 
-  state = { nickname: nick, pin: hashPin(pin), examDate: val, completed: [], streak: 0, wrongNotes: [] };
+  state = { nickname: nick, pin: hashPin(pin), examDate: val, completed: [], streak: 0, lastStudyDate: null, wrongNotes: [] };
   save();
   issueSession(nick);
   showScreen('mainScreen');
@@ -3183,6 +3191,7 @@ function startWrongNote() {
 
   document.getElementById('wrongResult').style.display  = 'none';
   document.getElementById('wrongContent').style.display = 'block';
+  document.getElementById('wrongFooter').style.display  = 'none';
   renderWrongQ(0);
   showScreen('wrongNoteScreen');
 }
@@ -3197,6 +3206,18 @@ function renderWrongQ(idx) {
     Math.round((idx / total) * 100) + '%';
   document.getElementById('wrongCount').textContent = (idx + 1) + '/' + total;
 
+  // 보기 셔플 — 정답 위치 추적
+  var indices = [0,1,2,3];
+  for (var s = indices.length - 1; s > 0; s--) {
+    var r = Math.floor(Math.random() * (s + 1));
+    var t = indices[s]; indices[s] = indices[r]; indices[r] = t;
+  }
+  var shuffledOpts = indices.map(function(i){ return note.opts[i]; });
+  var newAns = indices.indexOf(note.ans);
+  // 셔플된 정답 인덱스를 note에 임시 저장
+  note._shuffledOpts = shuffledOpts;
+  note._newAns       = newAns;
+
   var sourceLabel = note.source === 'mock' ? '모의고사'
     : note.source === 'review' ? '복습 (' + note.day + '일차)'
     : note.day + '일차';
@@ -3206,7 +3227,7 @@ function renderWrongQ(idx) {
   html += '📝 출처: ' + sourceLabel + '</div>';
   html += '<div style="font-size:14px;font-weight:700;color:var(--text);line-height:1.7;margin-bottom:16px;white-space:pre-wrap;">' + note.q + '</div>';
 
-  note.opts.forEach(function(opt, oi) {
+  shuffledOpts.forEach(function(opt, oi) {
     html += '<div id="wrongOpt' + oi + '" onclick="selectWrongOpt(' + idx + ',' + oi + ')" ';
     html += 'style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:10px;';
     html += 'background:var(--bg3);border:1.5px solid var(--border);margin-bottom:8px;cursor:pointer;word-break:keep-all;">';
@@ -3221,15 +3242,16 @@ function renderWrongQ(idx) {
 }
 
 function selectWrongOpt(idx, oi) {
-  var note  = wrongNoteList[idx];
-  var LTRS  = ['A','B','C','D'];
-  var isRight = (oi === note.ans);
+  var note    = wrongNoteList[idx];
+  var LTRS    = ['A','B','C','D'];
+  var newAns  = note._newAns !== undefined ? note._newAns : note.ans;
+  var isRight = (oi === newAns);
 
   // 보기 색상 표시
   note.opts.forEach(function(opt, i) {
     var el = document.getElementById('wrongOpt' + i);
     if (!el) return;
-    if (i === note.ans) {
+    if (i === newAns) {
       el.style.background = 'var(--lgreen)';
       el.style.borderColor = 'var(--green)';
       el.querySelector('div').style.background = 'var(--green)';
@@ -3247,7 +3269,7 @@ function selectWrongOpt(idx, oi) {
   // 해설 추가
   var content = document.getElementById('wrongContent');
   var ex = document.createElement('div');
-  ex.style.cssText = 'margin:8px 18px 0;padding:10px 14px;border-radius:10px;background:rgba(88,166,255,0.08);border-left:3px solid var(--accent);';
+  ex.style.cssText = 'margin:8px 18px 16px;padding:10px 14px;border-radius:10px;background:rgba(88,166,255,0.08);border-left:3px solid var(--accent);';
   ex.innerHTML = '<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px;">' +
     (isRight ? '✅ 정답이에요!' : '❌ 오답') + '</div>' +
     '<div style="font-size:12px;color:var(--text);line-height:1.6;">' + note.ex + '</div>';
@@ -3261,14 +3283,23 @@ function selectWrongOpt(idx, oi) {
     addWrongNote(note.source, note.day, { q: note.q, opts: note.opts, ans: note.ans, ex: note.ex });
   }
 
-  // 다음 문제로 자동 이동
-  setTimeout(function() {
-    if (wrongNoteIdx + 1 < wrongNoteTotal) {
-      renderWrongQ(wrongNoteIdx + 1);
-    } else {
-      showWrongResult();
-    }
-  }, 1400);
+  // 자동이동 대신 버튼 표시
+  var footer = document.getElementById('wrongFooter');
+  var btn    = document.getElementById('wrongNextBtn');
+  if (footer && btn) {
+    var isLast = (wrongNoteIdx + 1 >= wrongNoteTotal);
+    btn.textContent = isLast ? '결과 보기' : '다음 문제 →';
+    footer.style.display = 'block';
+  }
+}
+
+function wrongNext() {
+  document.getElementById('wrongFooter').style.display = 'none';
+  if (wrongNoteIdx + 1 < wrongNoteTotal) {
+    renderWrongQ(wrongNoteIdx + 1);
+  } else {
+    showWrongResult();
+  }
 }
 
 function showWrongResult() {
@@ -3409,7 +3440,29 @@ function retryQuiz() {
 function finishDay() {
   if (state.completed.indexOf(currentDay) === -1) {
     state.completed.push(currentDay);
-    state.streak = (state.streak || 0) + 1;
+
+    // 날짜 기반 streak 계산
+    var todayStr = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
+    var last = state.lastStudyDate;
+    if (!last) {
+      // 첫 학습
+      state.streak = 1;
+    } else {
+      var lastDate  = new Date(last);  lastDate.setHours(0,0,0,0);
+      var todayDate = new Date(todayStr); todayDate.setHours(0,0,0,0);
+      var diffDays  = Math.round((todayDate - lastDate) / 86400000);
+      if (diffDays === 1) {
+        // 어제 공부 → 연속!
+        state.streak = (state.streak || 0) + 1;
+      } else if (diffDays === 0) {
+        // 오늘 이미 다른 일차 완료 → streak 유지 (중복 증가 방지)
+      } else {
+        // 하루 이상 빠짐 → 리셋
+        state.streak = 1;
+      }
+    }
+    state.lastStudyDate = todayStr;
+
     // 다음 일차가 콘텐츠가 있을 때만 unlock
     var next = CURRICULUM.find(function(c){ return c.day === currentDay + 1; });
     if (next && CONTENT[currentDay + 1]) next.available = true;
@@ -3615,8 +3668,8 @@ function submitMock() {
     if (isC) {
       correct++;
       removeWrongNote(makeWrongKey('mock', 0, q.q));
-    } else {
-      // 미답(null)도 오답으로 처리
+    } else if (mockAnswers[i] !== null) {
+      // 답을 선택했지만 틀린 경우만 오답 노트 저장 (미답 제외)
       addWrongNote('mock', 0, q);
     }
     chStats[q.ch].total++;
