@@ -720,6 +720,7 @@ body {
   </div>
 
   <div class="section-title" id="mockSectionTitle" style="display:none">모의고사</div>
+  <div id="mockLockNotice" style="display:none;margin:0 20px 8px;padding:10px 14px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);font-size:12px;color:var(--text2);"></div>
   <div id="mockSection" style="display:none;padding:0 20px 4px;">
     <div class="review-card" onclick="startMockExam()" style="background:linear-gradient(135deg,#1a2332,#1F3864);border:1px solid rgba(88,166,255,0.4);">
       <div class="review-icon" style="background:rgba(255,165,0,0.15);border:1px solid rgba(255,165,0,0.4);">&#127891;</div>
@@ -2490,11 +2491,13 @@ var state = {
   examDate: null,
   completed: [],  // [{day: N, date: 'YYYY-MM-DD'}] 구조
   streak: 0,
+  bestStreak: 0,
   lastStudyDate: null,
   wrongNotes: [],
   mockHistory: [],
   studyLog: [],
   bookmarks: [],
+  celebratedAll: false,
 };
 
 /* completed 헬퍼 함수 */
@@ -2535,6 +2538,16 @@ function migrateCompleted() {
 var currentDay = 1;
 var quizAnswered = 0, quizCorrect = 0;
 var LTRS = ['A','B','C','D'];
+
+
+/* ══════════════════════════════
+   CONSTANTS
+══════════════════════════════ */
+var TOTAL_LECTURES   = 11;   // 전체 강의 수
+var MOCK_TOTAL_Q     = 40;   // 모의고사 문제 수
+var MOCK_PASS_SCORE  = 26;   // 모의고사 합격 기준 (65%)
+var MOCK_TIME_SEC    = 3600; // 모의고사 제한 시간 (60분)
+var SESSION_HOURS    = 24;   // 세션 유지 시간
 
 /* ══════════════════════════════
    INIT & AUTH
@@ -2731,7 +2744,7 @@ function initPinInputs(prefix, onComplete) {
 /* ── 로그인 검증 ── */
 function issueSession(nick) {
   // 24시간 세션 토큰 발급
-  var session = { nick: nick, expiry: Date.now() + 24 * 60 * 60 * 1000 };
+  var session = { nick: nick, expiry: Date.now() + SESSION_HOURS * 3600 * 1000 };
   localStorage.setItem('istqb_session', JSON.stringify(session));
 }
 
@@ -2830,9 +2843,8 @@ function confirmEdit() {
 
   // 시험일 업데이트
   state.examDate = newDate;
-  save();
   closeEditModal();
-  renderMain();
+  saveAndRender();
   showToast('✅ 시험일이 변경되었어요!');
 }
 
@@ -2901,7 +2913,7 @@ function startStudy() {
   var today = new Date(); today.setHours(0,0,0,0);
   if (exam <= today) return alert('시험일은 오늘 이후여야 해요!');
 
-  state = { nickname: nick, pin: hashPin(pin), examDate: val, completed: [], streak: 0, lastStudyDate: null, wrongNotes: [], mockHistory: [], studyLog: [], bookmarks: [] };
+  state = { nickname: nick, pin: hashPin(pin), examDate: val, completed: [], streak: 0, bestStreak: 0, lastStudyDate: null, wrongNotes: [], mockHistory: [], studyLog: [], bookmarks: [], celebratedAll: false };
   save();
   issueSession(nick);
   showScreen('mainScreen');
@@ -3116,6 +3128,18 @@ function renderMain() {
   document.getElementById('statDone').textContent   = done;
   document.getElementById('statLeft').textContent   = total - done;
   document.getElementById('statStreak').textContent = state.streak || 0;
+  var best = state.bestStreak || 0;
+  var streakCard = document.getElementById('statStreak').parentElement;
+  var bestEl = document.getElementById('statBest');
+  if (!bestEl && best > 0) {
+    var sub = document.createElement('div');
+    sub.id = 'statBest';
+    sub.style.cssText = 'font-size:9px;color:var(--text3);margin-top:1px;';
+    sub.textContent = '최고 ' + best + '일';
+    streakCard.appendChild(sub);
+  } else if (bestEl) {
+    bestEl.textContent = '최고 ' + best + '일';
+  }
 
   // 학습 캘린더 — 완료 일차 1개 이상 시 노출
   var calSection = document.getElementById('calendarSection');
@@ -3158,17 +3182,25 @@ function renderMain() {
     reviewSectionTitle.style.display = 'none';
   }
 
-  // 모의고사 섹션 — 11일차 모두 완료 시 노출
-  var allDone = completedDays().length >= CURRICULUM.length;
+  // 모의고사 섹션 — 11강 모두 완료 시 노출
+  var allDone = completedDays().length >= TOTAL_LECTURES;
   var mockSection = document.getElementById('mockSection');
   var mockSectionTitle = document.getElementById('mockSectionTitle');
+  var mockLockNotice = document.getElementById('mockLockNotice');
   if (allDone) {
     mockSection.style.display = 'block';
     mockSectionTitle.style.display = 'block';
+    if (mockLockNotice) mockLockNotice.style.display = 'none';
     renderMockHistoryMini();
   } else {
     mockSection.style.display = 'none';
     mockSectionTitle.style.display = 'none';
+    // 5강 이상 완료 시 "곧 해금" 안내 표시
+    if (mockLockNotice) {
+      var left = TOTAL_LECTURES - completedDays().length;
+      mockLockNotice.style.display = 'block';
+      mockLockNotice.textContent = '🔒 모의고사는 전 강의 완료 후 활성화돼요 (남은 강의 ' + left + '개)';
+    }
   }
 
   // 오답 노트 섹션
@@ -3532,6 +3564,25 @@ function makeWrongKey(source, day, q) {
   return source + '_' + day + '_' + (q || '').slice(0, 20);
 }
 
+function getSourceLabel(source, day) {
+  return source === 'mock' ? '모의고사'
+    : source === 'review' ? '복습 (' + day + '강)'
+    : day + '강';
+}
+
+function saveAndRender() {
+  save();
+  renderMain();
+}
+
+function showCelebration() {
+  document.getElementById('celebrationModal').style.display = 'flex';
+}
+
+function closeCelebration() {
+  document.getElementById('celebrationModal').style.display = 'none';
+}
+
 function addWrongNote(source, day, qObj) {
   if (!state.wrongNotes) state.wrongNotes = [];
   var key = makeWrongKey(source, day, qObj.q);
@@ -3566,522 +3617,109 @@ var wrongNoteIdx   = 0;
 var wrongNoteRight = 0;
 var wrongNoteTotal = 0;
 
+/* ══════════════════════════════
+   WRONG NOTE & BOOKMARK — 통합 렌더러
+══════════════════════════════ */
+var noteMode = 'wrong'; // 'wrong' | 'bookmark'
+
+function _getNoteList()  { return noteMode === 'wrong' ? wrongNoteList  : bookmarkList;  }
+function _getNoteIdx()   { return noteMode === 'wrong' ? wrongNoteIdx   : bookmarkIdx;   }
+function _setNoteIdx(v)  { if (noteMode === 'wrong') wrongNoteIdx = v; else bookmarkIdx = v; }
+function _getNoteTotal() { return noteMode === 'wrong' ? wrongNoteTotal : bookmarkTotal; }
+function _incNoteRight() { if (noteMode === 'wrong') wrongNoteRight++; else bookmarkRight++; }
+function _getContentId() { return noteMode === 'wrong' ? 'wrongContent'  : 'bookmarkContent'; }
+function _getFooterId()  { return noteMode === 'wrong' ? 'wrongFooter'   : 'bookmarkFooter';  }
+function _getNextBtnId(){ return noteMode === 'wrong' ? 'wrongNextBtn'  : 'bookmarkNextBtn'; }
+function _getProgId()    { return noteMode === 'wrong' ? 'wrongProgFill' : 'bookmarkProgFill'; }
+function _getCountId()   { return noteMode === 'wrong' ? 'wrongCount'    : 'bookmarkCount';   }
+function _getOptPrefix() { return noteMode === 'wrong' ? 'wrongOpt'      : 'bmOpt';           }
+
+function _initNoteScreen(screenId, resultId) {
+  document.getElementById(resultId).style.display       = 'none';
+  document.getElementById(_getContentId()).style.display = 'block';
+  document.getElementById(_getFooterId()).style.display  = 'none';
+  renderNoteQ(0);
+  showScreen(screenId);
+}
+
 function startWrongNote() {
   var notes = state.wrongNotes || [];
   if (notes.length === 0) { showToast('오답 노트가 비어있어요!'); return; }
-
-  // Fisher-Yates 셔플
-  wrongNoteList = notes.slice();
-  for (var i = wrongNoteList.length - 1; i > 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1));
-    var t = wrongNoteList[i]; wrongNoteList[i] = wrongNoteList[j]; wrongNoteList[j] = t;
-  }
-
+  noteMode       = 'wrong';
+  wrongNoteList  = shuffle(notes.slice());
   wrongNoteIdx   = 0;
   wrongNoteRight = 0;
   wrongNoteTotal = wrongNoteList.length;
-
-  document.getElementById('wrongResult').style.display  = 'none';
-  document.getElementById('wrongContent').style.display = 'block';
-  document.getElementById('wrongFooter').style.display  = 'none';
-  renderWrongQ(0);
-  showScreen('wrongNoteScreen');
+  _initNoteScreen('wrongNoteScreen', 'wrongResult');
 }
 
-function renderWrongQ(idx) {
-  wrongNoteIdx = idx;
-  var note  = wrongNoteList[idx];
-  var total = wrongNoteList.length;
-  var LTRS  = ['A','B','C','D'];
+function startBookmark() {
+  var bmarks = state.bookmarks || [];
+  if (bmarks.length === 0) { showToast('북마크한 문제가 없어요!'); return; }
+  noteMode      = 'bookmark';
+  bookmarkList  = shuffle(bmarks.slice());
+  bookmarkIdx   = 0;
+  bookmarkRight = 0;
+  bookmarkTotal = bookmarkList.length;
+  _initNoteScreen('bookmarkScreen', 'bookmarkResult');
+}
 
-  document.getElementById('wrongProgFill').style.width =
-    Math.round((idx / total) * 100) + '%';
-  document.getElementById('wrongCount').textContent = (idx + 1) + '/' + total;
+function renderNoteQ(idx) {
+  _setNoteIdx(idx);
+  var list      = _getNoteList();
+  var note      = list[idx];
+  var total     = list.length;
+  var LTRS      = ['A','B','C','D'];
+  var optPrefix = _getOptPrefix();
+  var isWrong   = noteMode === 'wrong';
 
-  // 보기 셔플 — 정답 위치 추적
+  document.getElementById(_getProgId()).style.width    = Math.round((idx / total) * 100) + '%';
+  document.getElementById(_getCountId()).textContent   = (idx + 1) + '/' + total;
+
+  // 보기 셔플
   var indices = [0,1,2,3];
   for (var s = indices.length - 1; s > 0; s--) {
     var r = Math.floor(Math.random() * (s + 1));
     var t = indices[s]; indices[s] = indices[r]; indices[r] = t;
   }
   var shuffledOpts = indices.map(function(i){ return note.opts[i]; });
-  var newAns = indices.indexOf(note.ans);
-  // 셔플된 정답 인덱스를 note에 임시 저장
-  note._shuffledOpts = shuffledOpts;
-  note._newAns       = newAns;
+  note._newAns = indices.indexOf(note.ans);
 
-  var sourceLabel = note.source === 'mock' ? '모의고사'
-    : note.source === 'review' ? '복습 (' + note.day + '강)'
-    : note.day + '강';
+  var sourceLabel = getSourceLabel(note.source, note.day);
+  var isBm = !isWrong && isBookmarked(note.key);
 
-  var html = '<div style="padding:14px 18px 100px;">';
-  html += '<div style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:rgba(248,81,73,0.12);color:var(--red);border:1px solid rgba(248,81,73,0.3);display:inline-block;margin-bottom:10px;">';
-  html += '📝 출처: ' + sourceLabel + '</div>';
-  html += '<div style="font-size:14px;font-weight:700;color:var(--text);line-height:1.7;margin-bottom:16px;white-space:pre-wrap;">' + note.q + '</div>';
-
-  shuffledOpts.forEach(function(opt, oi) {
-    html += '<div id="wrongOpt' + oi + '" onclick="selectWrongOpt(' + idx + ',' + oi + ')" ';
-    html += 'style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:10px;';
-    html += 'background:var(--bg3);border:1.5px solid var(--border);margin-bottom:8px;cursor:pointer;word-break:keep-all;">';
-    html += '<div style="width:24px;height:24px;min-width:24px;border-radius:6px;background:var(--bg2);';
-    html += 'display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text2);margin-top:1px;">' + LTRS[oi] + '</div>';
-    html += '<span style="font-size:13.5px;color:var(--text);line-height:1.6;">' + opt + '</span>';
-    html += '</div>';
-  });
-  html += '</div>';
-
-  document.getElementById('wrongContent').innerHTML = html;
-}
-
-function selectWrongOpt(idx, oi) {
-  var note    = wrongNoteList[idx];
-  var LTRS    = ['A','B','C','D'];
-  var newAns  = note._newAns !== undefined ? note._newAns : note.ans;
-  var isRight = (oi === newAns);
-
-  // 보기 색상 표시
-  note.opts.forEach(function(opt, i) {
-    var el = document.getElementById('wrongOpt' + i);
-    if (!el) return;
-    if (i === newAns) {
-      el.style.background = 'var(--lgreen)';
-      el.style.borderColor = 'var(--green)';
-      el.querySelector('div').style.background = 'var(--green)';
-      el.querySelector('div').style.color = '#fff';
-    } else if (i === oi && !isRight) {
-      el.style.background = '#3a1a1a';
-      el.style.borderColor = 'var(--red)';
-      el.querySelector('div').style.background = 'var(--red)';
-      el.querySelector('div').style.color = '#fff';
-    }
-    el.style.cursor = 'default';
-    el.onclick = null;
-  });
-
-  // 해설 추가
-  var content = document.getElementById('wrongContent');
-  var ex = document.createElement('div');
-  ex.style.cssText = 'margin:8px 18px 16px;padding:10px 14px;border-radius:10px;background:rgba(88,166,255,0.08);border-left:3px solid var(--accent);';
-  ex.innerHTML = '<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px;">' +
-    (isRight ? '✅ 정답이에요!' : '❌ 오답') + '</div>' +
-    '<div style="font-size:12px;color:var(--text);line-height:1.6;">' + note.ex + '</div>';
-  content.querySelector('div').appendChild(ex);
-
-  // 정답이면 오답 노트에서 제거, 오답이면 wrongAt 갱신
-  if (isRight) {
-    wrongNoteRight++;
-    removeWrongNote(note.key);
-  } else {
-    addWrongNote(note.source, note.day, { q: note.q, opts: note.opts, ans: note.ans, ex: note.ex });
-  }
-
-  // 자동이동 대신 버튼 표시
-  var footer = document.getElementById('wrongFooter');
-  var btn    = document.getElementById('wrongNextBtn');
-  if (footer && btn) {
-    var isLast = (wrongNoteIdx + 1 >= wrongNoteTotal);
-    btn.textContent = isLast ? '결과 보기' : '다음 문제 →';
-    footer.style.display = 'block';
-  }
-}
-
-function wrongNext() {
-  document.getElementById('wrongFooter').style.display = 'none';
-  if (wrongNoteIdx + 1 < wrongNoteTotal) {
-    renderWrongQ(wrongNoteIdx + 1);
-  } else {
-    showWrongResult();
-  }
-}
-
-function showWrongResult() {
-  document.getElementById('wrongContent').style.display = 'none';
-  var pct = wrongNoteTotal > 0 ? Math.round(wrongNoteRight / wrongNoteTotal * 100) : 0;
-  document.getElementById('wrongResultScore').textContent = wrongNoteRight + ' / ' + wrongNoteTotal;
-  document.getElementById('wrongResultPct').textContent   = '정답률 ' + pct + '%';
-  var msg = pct === 100 ? '🎉 모든 오답을 극복했어요! 오답 노트가 비워졌어요.' :
-            pct >= 70  ? '잘 하고 있어요! 남은 오답을 계속 복습해요.' :
-                         '조금 더 복습이 필요해요. 다시 도전해보세요!';
-  document.getElementById('wrongResultMsg').textContent = msg;
-  document.getElementById('wrongResult').style.display = 'flex';
-}
-
-/* ══════════════════════════════
-   MOCK HISTORY (모의고사 성적 히스토리)
-══════════════════════════════ */
-function renderMockHistoryMini() {
-  var history = state.mockHistory || [];
-  var miniWrap = document.getElementById('mockHistoryMini');
-  var moreBtn  = document.getElementById('mockHistoryMoreBtn');
-  if (!miniWrap) return;
-
-  if (history.length === 0) {
-    miniWrap.style.display = 'none';
-    moreBtn.style.display  = 'none';
-    return;
-  }
-
-  // 최근 3회 표시
-  var recent = history.slice(-3).reverse();
-  var html = '<div style="display:flex;flex-direction:column;gap:5px;">';
-  recent.forEach(function(h, i) {
-    var passColor = h.passed ? '#3fb950' : '#f85149';
-    var passBg    = h.passed ? 'rgba(63,185,80,0.1)' : 'rgba(248,81,73,0.1)';
-    var trend     = '';
-    var absIdx    = history.length - 1 - i;
-    if (absIdx > 0) {
-      var prev = history[absIdx - 1];
-      if (h.pct > prev.pct)      trend = '▲ +' + (h.pct - prev.pct) + '%';
-      else if (h.pct < prev.pct) trend = '▼ -' + (prev.pct - h.pct) + '%';
-      else                        trend = '━ 유지';
-    }
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;';
-    html += 'padding:8px 12px;border-radius:10px;background:' + passBg + ';border:1px solid ' + passColor + '33;">';
-    html += '<div style="font-size:11px;color:var(--text2);">' + h.date + '  &nbsp;' + (history.length - i) + '회차</div>';
-    html += '<div style="display:flex;align-items:center;gap:8px;">';
-    if (trend) html += '<span style="font-size:10px;color:var(--text2);">' + trend + '</span>';
-    html += '<span style="font-size:13px;font-weight:800;color:' + passColor + ';">' + h.score + '/' + h.total + ' (' + h.pct + '%)</span>';
-    html += '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:' + passColor + '22;color:' + passColor + ';">';
-    html += (h.passed ? '합격' : '불합격') + '</span>';
-    html += '</div></div>';
-  });
-  html += '</div>';
-
-  miniWrap.innerHTML = html;
-  miniWrap.style.display = 'block';
-  moreBtn.style.display  = history.length > 1 ? 'block' : 'none';
-}
-
-function showMockHistory() {
-  var history = state.mockHistory || [];
-  if (history.length === 0) { showToast('아직 모의고사 기록이 없어요!'); return; }
-
-  // 요약 카드
-  var best    = Math.max.apply(null, history.map(function(h){ return h.pct; }));
-  var latest  = history[history.length - 1];
-  var passes  = history.filter(function(h){ return h.passed; }).length;
-  var avgPct  = Math.round(history.reduce(function(s,h){ return s+h.pct; }, 0) / history.length);
-
-  var summaryEl = document.getElementById('mockHistorySummary');
-  summaryEl.innerHTML = [
-    { label:'응시 횟수',  val: history.length + '회' },
-    { label:'최고 점수', val: best + '%' },
-    { label:'평균 점수', val: avgPct + '%' },
-    { label:'합격 횟수', val: passes + '/' + history.length },
-  ].map(function(c) {
-    return '<div style="flex:1;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center;">' +
-      '<div style="font-size:18px;font-weight:800;color:var(--accent);">' + c.val + '</div>' +
-      '<div style="font-size:10px;color:var(--text2);margin-top:2px;">' + c.label + '</div></div>';
-  }).join('');
-
-  // 점수 추이 그래프 (SVG 막대 그래프)
-  var chartEl = document.getElementById('mockHistoryChart');
-  var W = 320, H = 120, PAD = 24;
-  var maxPct = 100;
-  var barW   = Math.min(32, Math.floor((W - PAD * 2) / history.length - 4));
-  var gap    = Math.floor((W - PAD * 2 - barW * history.length) / Math.max(history.length - 1, 1));
-
-  var svg = '<svg width="100%" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="display:block;">';
-  // 합격선 65% 표시
-  var lineY = PAD + (H - PAD * 2) * (1 - 65 / maxPct);
-  svg += '<line x1="' + PAD + '" y1="' + lineY + '" x2="' + (W - PAD) + '" y2="' + lineY + '" stroke="#f0a500" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>';
-  svg += '<text x="' + (W - PAD + 2) + '" y="' + (lineY + 4) + '" font-size="9" fill="#f0a500" opacity="0.9">65%</text>';
-
-  history.forEach(function(h, i) {
-    var x      = PAD + i * (barW + gap);
-    var barH   = Math.round((H - PAD * 2) * (h.pct / maxPct));
-    var y      = PAD + (H - PAD * 2) - barH;
-    var color  = h.passed ? '#3fb950' : '#f85149';
-    svg += '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + barH + '" rx="4" fill="' + color + '" opacity="0.85"/>';
-    svg += '<text x="' + (x + barW/2) + '" y="' + (y - 4) + '" text-anchor="middle" font-size="9" fill="' + color + '" font-weight="bold">' + h.pct + '%</text>';
-    svg += '<text x="' + (x + barW/2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="8" fill="#888">' + (i + 1) + '회</text>';
-  });
-  svg += '</svg>';
-
-  chartEl.innerHTML = '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px 8px 4px;">' +
-    '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;padding-left:4px;">점수 추이</div>' + svg + '</div>';
-
-  // 전체 기록 목록
-  var listEl = document.getElementById('mockHistoryList');
-  var listHtml = '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">전체 기록</div>';
-  var reversed = history.slice().reverse();
-  reversed.forEach(function(h, i) {
-    var roundNum  = history.length - i;
-    var passColor = h.passed ? '#3fb950' : '#f85149';
-    var passBg    = h.passed ? 'rgba(63,185,80,0.08)' : 'rgba(248,81,73,0.08)';
-    listHtml += '<div style="background:' + passBg + ';border:0.5px solid ' + passColor + '44;border-radius:12px;padding:12px 14px;margin-bottom:8px;">';
-    listHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
-    listHtml += '<div style="font-size:12px;font-weight:700;color:var(--text);">' + roundNum + '회차 &nbsp;<span style="font-size:10px;color:var(--text2);font-weight:400;">' + h.date + '</span></div>';
-    listHtml += '<div style="display:flex;align-items:center;gap:6px;">';
-    listHtml += '<span style="font-size:14px;font-weight:800;color:' + passColor + ';">' + h.score + '/' + h.total + ' (' + h.pct + '%)</span>';
-    listHtml += '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:' + passColor + '22;color:' + passColor + ';">' + (h.passed ? '합격' : '불합격') + '</span>';
-    listHtml += '</div></div>';
-    // 챕터별 정답률 미니 바
-    if (h.chStats) {
-      var chNames = {1:'Ch.1',2:'Ch.2',3:'Ch.3',4:'Ch.4',5:'Ch.5',6:'Ch.6'};
-      listHtml += '<div style="display:flex;gap:4px;flex-wrap:wrap;">';
-      for (var ch = 1; ch <= 6; ch++) {
-        var st  = h.chStats[ch];
-        if (!st || st.total === 0) continue;
-        var cp  = Math.round(st.correct / st.total * 100);
-        var bc  = cp >= 70 ? '#3fb950' : cp >= 50 ? '#d29922' : '#f85149';
-        listHtml += '<div style="flex:1;min-width:40px;">';
-        listHtml += '<div style="font-size:9px;color:var(--text2);margin-bottom:2px;text-align:center;">' + chNames[ch] + '</div>';
-        listHtml += '<div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;">';
-        listHtml += '<div style="width:' + cp + '%;height:100%;background:' + bc + ';border-radius:2px;"></div></div>';
-        listHtml += '<div style="font-size:9px;color:' + bc + ';text-align:center;margin-top:1px;">' + cp + '%</div>';
-        listHtml += '</div>';
-      }
-      listHtml += '</div>';
-    }
-    listHtml += '</div>';
-  });
-  listEl.innerHTML = listHtml;
-
-  showScreen('mockHistoryScreen');
-}
-
-/* ══════════════════════════════
-   SUMMARY CARD (핵심 요약 카드)
-══════════════════════════════ */
-var SUMMARY_DATA = [
-  {
-    ch: 'Ch.1', title: '테스팅 기초',
-    color: '#185fa5', bg: '#1a2d4a',
-    points: [
-      '테스팅 7원리 암기 — ①결함존재 ②완벽불가 ③조기시작 ④결함집중 ⑤살충제역설 ⑥상황의존 ⑦오류부재오류',
-      '오류(Error) → 결함(Defect) → 장애(Failure) 순서',
-      '정적 테스팅 = 실행 없이 결함 발견 / 동적 테스팅 = 실행 후 결함 발견',
-      '테스팅 ≠ 디버깅 — 테스팅은 결함 발견, 디버깅은 결함 제거',
-    ]
-  },
-  {
-    ch: 'Ch.2', title: 'SDLC · 테스트 레벨',
-    color: '#3b6d11', bg: '#1a2d1a',
-    points: [
-      'V모델: 요구사항↔인수 / 시스템설계↔시스템 / 상위설계↔통합 / 상세설계↔컴포넌트',
-      '하향식↓ = Stub(하위 대체) / 상향식↑ = Driver(상위 대체)',
-      '리그레션 테스팅 = 변경 후 기존 기능 정상 여부 확인 → 자동화 최적',
-      '알파(개발 환경) vs 베타(실제 고객 환경) — 수행 환경이 핵심 차이',
-    ]
-  },
-  {
-    ch: 'Ch.3', title: '정적 테스팅',
-    color: '#7a4f00', bg: '#2d1f00',
-    points: [
-      '리뷰 유형 공식성 순서: 비공식 < 워크스루 < 기술리뷰 < 인스펙션',
-      '인스펙션 = Moderator 주도, 입·출구 기준, 결함 통계 수집 (가장 공식적)',
-      '워크스루 = 작성자(Author) 주도, 교육 목적, 비교적 비공식',
-      '리뷰 프로세스 5단계: 계획 → 개시 → 개별검토 → 검토회의 → 수정·후속조치',
-    ]
-  },
-  {
-    ch: 'Ch.4', title: '테스트 기법',
-    color: '#6b3a9e', bg: '#2a1a3a',
-    points: [
-      'EP: 파티션 내 대표값 / BVA: 경계-1, 경계, 경계+1 (3값) 테스트',
-      '결정 테이블: 조건 조합별 행동 정의 / 상태 전이: 상태 변화 워크플로',
-      '결정 커버리지 100% → 구문 커버리지 100% 보장 (반대는 X)',
-      '탐색적 = 학습·설계·실행 동시 / 오류추측 = 경험 기반 취약점 집중',
-    ]
-  },
-  {
-    ch: 'Ch.5', title: '테스트 관리',
-    color: '#8f2020', bg: '#2d1a1a',
-    points: [
-      '리스크 수준 = 가능성(Likelihood) × 영향도(Impact)',
-      '제품 리스크 = 품질 문제 / 프로젝트 리스크 = 관리 문제',
-      '진입(Entry) = 시작 조건 / 종료(Exit) = 완료 조건',
-      '결함 생명주기: New → Open → Fixed → Closed (남으면 Reopened)',
-      '진행 보고서 = 테스팅 중 주기적 / 요약 보고서 = 완료 후 최종',
-    ]
-  },
-  {
-    ch: 'Ch.6', title: '테스트 도구',
-    color: '#0f6e56', bg: '#1a2d28',
-    points: [
-      '자동화 최적: 리그레션 테스팅 / 자동화 불가: 탐색적·사용성 테스팅',
-      '자동화 리스크: 초기 비용 과소평가, 스크립트 유지보수 비용',
-      '정적 분석 도구 = 코드 실행 없이 결함 검출 (SonarQube, ESLint)',
-      '도구 도입 순서: 필요성 분석 → 선정 → 파일럿 → 전사 도입 → 유지보수',
-    ]
-  },
-];
-
-function renderSummaryBanner(dday) {
-  var el = document.getElementById('summaryBanner');
-  if (!el) return;
-  if (dday <= 0) { el.style.display = 'none'; return; }
-
-  var html = '';
-  if (dday <= 3) {
-    html = '<div class="schedule-banner" style="background:#3a1a1a;color:#f85149;border:1px solid rgba(248,81,73,0.5);margin:0 20px 8px;cursor:pointer;" onclick="showSummaryScreen()">' +
-      '🔥 D-' + dday + ' 시험 임박! 핵심 요약 카드로 마지막 점검하세요 →</div>';
-  } else if (dday <= 7) {
-    html = '<div class="schedule-banner today" style="margin:0 20px 8px;cursor:pointer;" onclick="showSummaryScreen()">' +
-      '⚡ D-' + dday + ' 시험이 얼마 안 남았어요! 핵심 요약 카드 확인하세요 →</div>';
-  }
-  el.innerHTML = html;
-  el.style.display = html ? 'block' : 'none';
-}
-
-function showSummaryScreen() {
-  var content = document.getElementById('summaryContent');
-  if (!content) return;
-
-  var html = '';
-
-  // 상단 안내
-  html += '<div style="background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.3);border-radius:12px;padding:12px 14px;margin-bottom:16px;">';
-  html += '<div style="font-size:12px;color:#f0a500;font-weight:700;margin-bottom:4px;">💡 시험 직전 핵심 암기 포인트</div>';
-  html += '<div style="font-size:11px;color:var(--text2);line-height:1.6;">각 챕터의 자주 출제되는 핵심 개념만 모았어요. 시험 전날 빠르게 훑어보세요.</div>';
-  html += '</div>';
-
-  SUMMARY_DATA.forEach(function(ch) {
-    html += '<div style="background:' + ch.bg + ';border:1px solid ' + ch.color + '44;border-radius:14px;padding:14px 16px;margin-bottom:12px;">';
-    // 챕터 헤더
-    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">';
-    html += '<div style="background:' + ch.color + ';color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:10px;">' + ch.ch + '</div>';
-    html += '<div style="font-size:14px;font-weight:800;color:#fff;">' + ch.title + '</div>';
-    html += '</div>';
-    // 포인트 목록
-    ch.points.forEach(function(pt) {
-      html += '<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:7px;">';
-      html += '<div style="width:5px;height:5px;min-width:5px;border-radius:50%;background:' + ch.color + ';margin-top:6px;"></div>';
-      html += '<div style="font-size:12px;color:rgba(255,255,255,0.88);line-height:1.65;">' + pt + '</div>';
-      html += '</div>';
-    });
-    html += '</div>';
-  });
-
-  // 하단 응원 메시지
-  html += '<div style="text-align:center;padding:16px 0;">';
-  html += '<div style="font-size:24px;margin-bottom:8px;">🎯</div>';
-  html += '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px;">준비된 자에게 행운은 따라온다</div>';
-  html += '<div style="font-size:12px;color:var(--text2);">지금까지 쌓아온 실력을 믿으세요!</div>';
-  html += '</div>';
-
-  content.innerHTML = html;
-  showScreen('summaryScreen');
-}
-
-/* ══════════════════════════════
-   BOOKMARK (퀴즈 북마크)
-══════════════════════════════ */
-function isBookmarked(key) {
-  return (state.bookmarks || []).some(function(b) { return b.key === key; });
-}
-
-function toggleBookmark(source, day, qObj, btnId) {
-  if (!state.bookmarks) state.bookmarks = [];
-  var key = makeWrongKey(source, day, qObj.q);
-  var idx = state.bookmarks.findIndex(function(b) { return b.key === key; });
-  if (idx >= 0) {
-    state.bookmarks.splice(idx, 1);
-    showToast('북마크가 해제됐어요');
-  } else {
-    state.bookmarks.push({
-      key:    key,
-      source: source,
-      day:    day,
-      q:      qObj.q,
-      opts:   qObj.opts,
-      ans:    qObj.ans,
-      ex:     qObj.ex,
-    });
-    showToast('★ 북마크에 추가됐어요!');
-  }
-  save();
-  // 버튼 아이콘 즉시 업데이트
-  var btn = document.getElementById(btnId);
-  if (btn) {
-    var now = isBookmarked(key);
-    btn.textContent = now ? '★' : '☆';
-    btn.style.color = now ? '#f0a500' : 'var(--text3)';
-    btn.title = now ? '북마크 해제' : '북마크';
-  }
-}
-
-/* 북마크 화면 */
-var bookmarkList  = [];
-var bookmarkIdx   = 0;
-var bookmarkRight = 0;
-var bookmarkTotal = 0;
-
-function startBookmark() {
-  var bmarks = state.bookmarks || [];
-  if (bmarks.length === 0) { showToast('북마크한 문제가 없어요!'); return; }
-
-  // 셔플
-  bookmarkList = bmarks.slice();
-  for (var i = bookmarkList.length - 1; i > 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1));
-    var t = bookmarkList[i]; bookmarkList[i] = bookmarkList[j]; bookmarkList[j] = t;
-  }
-  bookmarkIdx   = 0;
-  bookmarkRight = 0;
-  bookmarkTotal = bookmarkList.length;
-
-  document.getElementById('bookmarkResult').style.display  = 'none';
-  document.getElementById('bookmarkContent').style.display = 'block';
-  document.getElementById('bookmarkFooter').style.display  = 'none';
-  renderBookmarkQ(0);
-  showScreen('bookmarkScreen');
-}
-
-function renderBookmarkQ(idx) {
-  bookmarkIdx = idx;
-  var note  = bookmarkList[idx];
-  var total = bookmarkList.length;
-  var LTRS  = ['A','B','C','D'];
-
-  document.getElementById('bookmarkProgFill').style.width =
-    Math.round((idx / total) * 100) + '%';
-  document.getElementById('bookmarkCount').textContent = (idx + 1) + '/' + total;
-
-  // 보기 셔플
-  var indices = [0,1,2,3];
-  for (var s = indices.length-1; s > 0; s--) {
-    var r = Math.floor(Math.random()*(s+1));
-    var t = indices[s]; indices[s]=indices[r]; indices[r]=t;
-  }
-  var shuffledOpts = indices.map(function(i){ return note.opts[i]; });
-  var newAns = indices.indexOf(note.ans);
-  note._bmShuffled = shuffledOpts;
-  note._bmNewAns   = newAns;
-
-  var sourceLabel = note.source === 'mock' ? '모의고사'
-    : note.source === 'review' ? '복습 (' + note.day + '강)'
-    : note.day + '강';
-
-  var isBm = isBookmarked(note.key);
   var html = '<div style="padding:14px 18px 100px;">';
   html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">';
-  html += '<div style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:rgba(240,165,0,0.12);color:#f0a500;border:1px solid rgba(240,165,0,0.3);">★ ' + sourceLabel + '</div>';
-  html += '<div onclick="toggleBookmark(\'' + note.source + '\',' + note.day + ',bookmarkList[' + idx + '],\'bmstar_' + idx + '\')" id="bmstar_' + idx + '" style="font-size:20px;cursor:pointer;color:' + (isBm ? '#f0a500' : 'var(--text3)') + ';">' + (isBm ? '★' : '☆') + '</div>';
+  if (isWrong) {
+    html += '<div style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:rgba(248,81,73,0.12);color:var(--red);border:1px solid rgba(248,81,73,0.3);">📝 출처: ' + sourceLabel + '</div><div></div>';
+  } else {
+    html += '<div style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:rgba(240,165,0,0.12);color:#f0a500;border:1px solid rgba(240,165,0,0.3);">★ ' + sourceLabel + '</div>';
+    html += '<div onclick="toggleBookmark(\'' + note.source + '\',' + note.day + ',bookmarkList[' + idx + '],\'bmstar_' + idx + '\')" id="bmstar_' + idx + '" style="font-size:20px;cursor:pointer;color:' + (isBm ? '#f0a500' : 'var(--text3)') + ';">' + (isBm ? '★' : '☆') + '</div>';
+  }
   html += '</div>';
   html += '<div style="font-size:14px;font-weight:700;color:var(--text);line-height:1.7;margin-bottom:16px;white-space:pre-wrap;">' + note.q + '</div>';
-
   shuffledOpts.forEach(function(opt, oi) {
-    html += '<div id="bmOpt' + oi + '" onclick="selectBookmarkOpt(' + idx + ',' + oi + ')" ';
-    html += 'style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:10px;';
-    html += 'background:var(--bg3);border:1.5px solid var(--border);margin-bottom:8px;cursor:pointer;word-break:keep-all;">';
-    html += '<div style="width:24px;height:24px;min-width:24px;border-radius:6px;background:var(--bg2);';
-    html += 'display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text2);margin-top:1px;">' + LTRS[oi] + '</div>';
-    html += '<span style="font-size:13.5px;color:var(--text);line-height:1.6;">' + opt + '</span>';
-    html += '</div>';
+    html += '<div id="' + optPrefix + oi + '" onclick="selectNoteOpt(' + idx + ',' + oi + ')" style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:10px;background:var(--bg3);border:1.5px solid var(--border);margin-bottom:8px;cursor:pointer;word-break:keep-all;">';
+    html += '<div style="width:24px;height:24px;min-width:24px;border-radius:6px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text2);margin-top:1px;">' + LTRS[oi] + '</div>';
+    html += '<span style="font-size:13.5px;color:var(--text);line-height:1.6;">' + opt + '</span></div>';
   });
   html += '</div>';
-  document.getElementById('bookmarkContent').innerHTML = html;
+  document.getElementById(_getContentId()).innerHTML = html;
 }
 
-function selectBookmarkOpt(idx, oi) {
-  var note   = bookmarkList[idx];
-  var newAns = note._bmNewAns !== undefined ? note._bmNewAns : note.ans;
-  var isRight = (oi === newAns);
+// 호환용 래퍼
+function renderWrongQ(idx)    { noteMode = 'wrong';    renderNoteQ(idx); }
+function renderBookmarkQ(idx) { noteMode = 'bookmark'; renderNoteQ(idx); }
+
+function selectNoteOpt(idx, oi) {
+  var list      = _getNoteList();
+  var note      = list[idx];
+  var optPrefix = _getOptPrefix();
+  var newAns    = note._newAns !== undefined ? note._newAns : note.ans;
+  var isRight   = (oi === newAns);
 
   note.opts.forEach(function(opt, i) {
-    var el = document.getElementById('bmOpt' + i);
+    var el = document.getElementById(optPrefix + i);
     if (!el) return;
     if (i === newAns) {
       el.style.background = 'var(--lgreen)'; el.style.borderColor = 'var(--green)';
@@ -4093,39 +3731,68 @@ function selectBookmarkOpt(idx, oi) {
     el.style.cursor = 'default'; el.onclick = null;
   });
 
-  if (isRight) bookmarkRight++;
-
-  // 해설
-  var content = document.getElementById('bookmarkContent');
+  var contentEl = document.getElementById(_getContentId());
   var ex = document.createElement('div');
   ex.style.cssText = 'margin:8px 18px 16px;padding:10px 14px;border-radius:10px;background:rgba(88,166,255,0.08);border-left:3px solid var(--accent);';
   ex.innerHTML = '<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px;">' +
-    (isRight ? '✅ 정답!' : '❌ 오답') + '</div>' +
+    (isRight ? '✅ 정답이에요!' : '❌ 오답') + '</div>' +
     '<div style="font-size:12px;color:var(--text);line-height:1.6;">' + note.ex + '</div>';
-  content.querySelector('div').appendChild(ex);
+  contentEl.querySelector('div').appendChild(ex);
 
-  var footer = document.getElementById('bookmarkFooter');
-  var btn    = document.getElementById('bookmarkNextBtn');
+  if (isRight) {
+    _incNoteRight();
+    if (noteMode === 'wrong') removeWrongNote(note.key);
+  } else {
+    if (noteMode === 'wrong') addWrongNote(note.source, note.day, { q: note.q, opts: note.opts, ans: note.ans, ex: note.ex });
+  }
+
+  var footer = document.getElementById(_getFooterId());
+  var btn    = document.getElementById(_getNextBtnId());
   if (footer && btn) {
-    btn.textContent = (bookmarkIdx + 1 >= bookmarkTotal) ? '결과 보기' : '다음 문제 →';
+    btn.textContent = (_getNoteIdx() + 1 >= _getNoteTotal()) ? '결과 보기' : '다음 문제 →';
     footer.style.display = 'block';
   }
 }
 
-function bookmarkNext() {
-  document.getElementById('bookmarkFooter').style.display = 'none';
-  if (bookmarkIdx + 1 < bookmarkTotal) {
-    renderBookmarkQ(bookmarkIdx + 1);
+// 호환용 래퍼
+function selectWrongOpt(idx, oi)    { noteMode = 'wrong';    selectNoteOpt(idx, oi); }
+function selectBookmarkOpt(idx, oi) { noteMode = 'bookmark'; selectNoteOpt(idx, oi); }
+
+function noteNext() {
+  document.getElementById(_getFooterId()).style.display = 'none';
+  var nextIdx = _getNoteIdx() + 1;
+  if (nextIdx < _getNoteTotal()) {
+    renderNoteQ(nextIdx);
   } else {
-    var pct = bookmarkTotal > 0 ? Math.round(bookmarkRight / bookmarkTotal * 100) : 0;
-    document.getElementById('bookmarkResultScore').textContent = bookmarkRight + ' / ' + bookmarkTotal + ' (' + pct + '%)';
-    document.getElementById('bookmarkResultMsg').textContent =
-      pct === 100 ? '완벽해요! 북마크 문제를 모두 맞혔어요.' :
-      pct >= 70   ? '잘 하고 있어요! 틀린 문제를 다시 확인해보세요.' :
-                    '조금 더 복습이 필요해요. 다시 도전해보세요!';
-    document.getElementById('bookmarkContent').style.display = 'none';
-    document.getElementById('bookmarkResult').style.display  = 'flex';
+    if (noteMode === 'wrong') showWrongResult();
+    else showBookmarkResult();
   }
+}
+
+function wrongNext()    { noteMode = 'wrong';    noteNext(); }
+function bookmarkNext() { noteMode = 'bookmark'; noteNext(); }
+
+function showWrongResult() {
+  document.getElementById('wrongContent').style.display = 'none';
+  var pct = wrongNoteTotal > 0 ? Math.round(wrongNoteRight / wrongNoteTotal * 100) : 0;
+  document.getElementById('wrongResultScore').textContent = wrongNoteRight + ' / ' + wrongNoteTotal;
+  document.getElementById('wrongResultPct').textContent   = '정답률 ' + pct + '%';
+  document.getElementById('wrongResultMsg').textContent   =
+    pct === 100 ? '🎉 모든 오답을 극복했어요! 오답 노트가 비워졌어요.' :
+    pct >= 70   ? '잘 하고 있어요! 남은 오답을 계속 복습해요.' :
+                  '조금 더 복습이 필요해요. 다시 도전해보세요!';
+  document.getElementById('wrongResult').style.display = 'flex';
+}
+
+function showBookmarkResult() {
+  document.getElementById('bookmarkContent').style.display = 'none';
+  var pct = bookmarkTotal > 0 ? Math.round(bookmarkRight / bookmarkTotal * 100) : 0;
+  document.getElementById('bookmarkResultScore').textContent = bookmarkRight + ' / ' + bookmarkTotal + ' (' + pct + '%)';
+  document.getElementById('bookmarkResultMsg').textContent   =
+    pct === 100 ? '완벽해요! 북마크 문제를 모두 맞혔어요.' :
+    pct >= 70   ? '잘 하고 있어요! 틀린 문제를 다시 확인해보세요.' :
+                  '조금 더 복습이 필요해요. 다시 도전해보세요!';
+  document.getElementById('bookmarkResult').style.display = 'flex';
 }
 
 /* ══════════════════════════════
@@ -4307,10 +3974,14 @@ function finishDay() {
       if (diffDays === 1) {
         state.streak = (state.streak || 0) + 1;
       } else if (diffDays === 0) {
-        // 오늘 이미 다른 일차 완료 → streak 유지
+        // 오늘 이미 다른 강의 완료 → streak 유지
       } else {
         state.streak = 1;
       }
+    }
+    // 최고 streak 갱신
+    if ((state.streak || 0) > (state.bestStreak || 0)) {
+      state.bestStreak = state.streak;
     }
     state.lastStudyDate = todayStr;
 
@@ -4324,6 +3995,15 @@ function finishDay() {
     var next = CURRICULUM.find(function(c){ return c.day === currentDay + 1; });
     if (next && CONTENT[currentDay + 1]) next.available = true;
     save();
+
+    // 11강 완주 축하 팝업 (최초 1회)
+    if (completedDays().length >= TOTAL_LECTURES && !state.celebratedAll) {
+      state.celebratedAll = true;
+      save();
+      goMain();
+      setTimeout(function() { showCelebration(); }, 400);
+      return;
+    }
   }
   goMain();
 }
@@ -4344,7 +4024,7 @@ var mockQuestions = [];
 var mockAnswers   = [];   // 사용자 선택 (null = 미답)
 var mockCurrent   = 0;
 var mockTimer     = null;
-var mockSecondsLeft = 60 * 60;
+var mockSecondsLeft = MOCK_TIME_SEC;
 var mockSubmitted = false;
 
 function shuffle(arr) {
@@ -4370,7 +4050,7 @@ function startMockExam() {
   mockCurrent   = 0;
   mockSubmitted = false;
   mockPaused    = false;
-  mockSecondsLeft = 60 * 60;
+  mockSecondsLeft = MOCK_TIME_SEC;
 
   document.getElementById('mockResult').style.display  = 'none';
   document.getElementById('mockReview').style.display  = 'none';
@@ -4536,7 +4216,7 @@ function submitMock() {
 
   var total  = mockQuestions.length;
   var pct    = Math.round(correct / total * 100);
-  var passed = correct >= 26;
+  var passed = correct >= MOCK_PASS_SCORE;
 
   // 성적 히스토리 저장 (제한 없음)
   if (!state.mockHistory) state.mockHistory = [];
@@ -4660,6 +4340,24 @@ if ('serviceWorker' in navigator) {
     <div class="modal-btns">
       <button class="modal-btn modal-cancel" onclick="closeEditModal()">취소</button>
       <button class="modal-btn modal-confirm" onclick="confirmEdit()">변경하기</button>
+    </div>
+  </div>
+</div>
+
+<div id="celebrationModal" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="text-align:center;">
+    <div style="font-size:48px;margin-bottom:8px;">🎉</div>
+    <div class="modal-title" style="font-size:20px;">전 강의 완주!</div>
+    <div class="modal-desc" style="margin-bottom:16px;">
+      11강을 모두 완료했어요!<br>
+      이제 모의고사에 도전해보세요 😊
+    </div>
+    <div style="background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.3);border-radius:12px;padding:12px;margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;">🏆 모의고사 잠금 해제!</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px;">40문제 · 60분 · 합격선 65%</div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-confirm" onclick="closeCelebration()">확인</button>
     </div>
   </div>
 </div>
