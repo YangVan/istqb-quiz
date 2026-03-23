@@ -700,8 +700,8 @@ body {
   </div>
 
   <div class="section-title" id="reviewSectionTitle" style="display:none">REVIEW</div>
-  <div class="review-section" id="reviewSection" style="display:none">
-    <div class="review-card" id="reviewCard10" onclick="startReview(10)" style="margin-bottom:10px;">
+  <div class="review-section" id="reviewSection" style="display:none;position:relative;z-index:1;">
+    <div class="review-card" id="reviewCard10" onclick="startReview(10)" style="margin-bottom:10px;position:relative;z-index:2;cursor:pointer;">
       <div class="review-icon">&#x26A1;</div>
       <div class="review-info">
         <div class="review-title">빠른 복습 <span style="font-size:11px;font-weight:700;color:var(--accent);background:rgba(88,166,255,0.12);border:1px solid rgba(88,166,255,0.3);border-radius:20px;padding:2px 8px;">랜덤 10문제</span></div>
@@ -709,7 +709,7 @@ body {
       </div>
       <div class="review-arrow">&#8250;</div>
     </div>
-    <div class="review-card" id="reviewCardAll" onclick="startReview(0)">
+    <div class="review-card" id="reviewCardAll" onclick="startReview(0)" style="position:relative;z-index:2;cursor:pointer;">
       <div class="review-icon">&#x1F4DA;</div>
       <div class="review-info">
         <div class="review-title">전체 복습</div>
@@ -3562,6 +3562,42 @@ function showReviewResult() {
 function makeWrongKey(source, day, q) {
   // 문제를 식별하는 고유 키 (출처 + 일차 + 문제 앞 20자)
   return source + '_' + day + '_' + (q || '').slice(0, 20);
+}
+
+/* ══════════════════════════════
+   BOOKMARK (퀴즈 북마크)
+══════════════════════════════ */
+function isBookmarked(key) {
+  return (state.bookmarks || []).some(function(b) { return b.key === key; });
+}
+
+function toggleBookmark(source, day, qObj, btnId) {
+  if (!state.bookmarks) state.bookmarks = [];
+  var key = makeWrongKey(source, day, qObj.q);
+  var idx = state.bookmarks.findIndex(function(b) { return b.key === key; });
+  if (idx >= 0) {
+    state.bookmarks.splice(idx, 1);
+    showToast('북마크가 해제됐어요');
+  } else {
+    state.bookmarks.push({
+      key:    key,
+      source: source,
+      day:    day,
+      q:      qObj.q,
+      opts:   qObj.opts,
+      ans:    qObj.ans,
+      ex:     qObj.ex,
+    });
+    showToast('★ 북마크에 추가됐어요!');
+  }
+  save();
+  var btn = document.getElementById(btnId);
+  if (btn) {
+    var now = isBookmarked(key);
+    btn.textContent = now ? '★' : '☆';
+    btn.style.color = now ? '#f0a500' : 'var(--text3)';
+    btn.title = now ? '북마크 해제' : '북마크';
+  }
 }
 
 function getSourceLabel(source, day) {
