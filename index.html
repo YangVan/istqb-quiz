@@ -3022,7 +3022,7 @@ function renderCalendar() {
 ══════════════════════════════ */
 function calcSchedule(dday, completed) {
   // 반환: { plan: {day→targetDate}, todayDays:[], delayedDays:[], status }
-  var TOTAL = CURRICULUM.length; // 11
+  var TOTAL = TOTAL_LECTURES;
   var plan = {};
   var today = new Date(); today.setHours(0,0,0,0);
   // 호환: 숫자 배열 또는 객체 배열 모두 처리
@@ -3122,7 +3122,7 @@ function renderMain() {
   document.getElementById('heroGreet').textContent = greet;
 
   var done = completedDays().length;
-  var total = CURRICULUM.length;
+  var total = TOTAL_LECTURES;
   document.getElementById('progressText').textContent = done + ' / ' + total + '강';
   document.getElementById('progressFill').style.width = Math.round(done/total*100) + '%';
   document.getElementById('statDone').textContent   = done;
@@ -3652,6 +3652,12 @@ var wrongNoteList  = [];
 var wrongNoteIdx   = 0;
 var wrongNoteRight = 0;
 var wrongNoteTotal = 0;
+
+/* ── 북마크 화면 ── */
+var bookmarkList  = [];
+var bookmarkIdx   = 0;
+var bookmarkRight = 0;
+var bookmarkTotal = 0;
 
 /* ══════════════════════════════
    SUMMARY CARD (핵심 요약 카드)
@@ -4296,6 +4302,12 @@ function startMockExam() {
   mockSubmitted = false;
   mockPaused    = false;
   mockSecondsLeft = MOCK_TIME_SEC;
+
+  // 일시정지 오버레이·버튼 초기화
+  var overlay = document.getElementById('mockPauseOverlay');
+  var pauseBtn = document.getElementById('mockPauseBtn');
+  if (overlay) overlay.style.display = 'none';
+  if (pauseBtn) { pauseBtn.innerHTML = '&#9646;&#9646;'; pauseBtn.title = '일시정지'; }
 
   document.getElementById('mockResult').style.display  = 'none';
   document.getElementById('mockReview').style.display  = 'none';
