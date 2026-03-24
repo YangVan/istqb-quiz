@@ -2569,10 +2569,16 @@ function hashPin(pin) {
 }
 
 function save() {
-  var profiles = loadProfiles();
-  profiles[state.nickname] = state;
-  saveProfiles(profiles);
-  localStorage.setItem(CURRENT_KEY, state.nickname);
+  try {
+    var profiles = loadProfiles();
+    profiles[state.nickname] = state;
+    saveProfiles(profiles);
+    localStorage.setItem(CURRENT_KEY, state.nickname);
+  } catch(e) {
+    // localStorage 용량 초과 등 예외 처리
+    console.warn('저장 실패:', e);
+    showToast('⚠ 저장 공간이 부족해요. 브라우저 설정을 확인해 주세요.');
+  }
 }
 
 function switchProfile() {
@@ -4525,6 +4531,8 @@ function submitMock() {
 
 function retryMock() {
   document.getElementById('mockResult').style.display = 'none';
+  var overlay = document.getElementById('mockPauseOverlay');
+  if (overlay) overlay.style.display = 'none';
   startMockExam();
 }
 
