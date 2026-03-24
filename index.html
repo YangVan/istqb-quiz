@@ -2427,6 +2427,16 @@ var currentDay = 1;
 var quizAnswered = 0, quizCorrect = 0;
 var LTRS = ['A','B','C','D'];
 
+/* ── DOM 헬퍼: el(tag, className, props) ──
+   e.g. el('div','quiz-card')
+        el('div','quiz-num',{textContent:'1'})
+        el('div','',{style:'font-size:12px;'}) */
+function el(tag, cls, props) {
+  var node = document.createElement(tag);
+  if (cls)   node.className = cls;
+  if (props) Object.keys(props).forEach(function(k){ node[k] = props[k]; });
+  return node;
+}
 
 /* ══════════════════════════════
    CONSTANTS
@@ -2792,20 +2802,20 @@ function confirmDelete() {
 /* ── 회원가입 ── */
 function startStudy() {
   var nick = (document.getElementById('nicknameInput').value || '').trim();
-  if (!nick) return alert('닉네임을 입력해 주세요!');
+  if (!nick) showToast('닉네임을 입력해 주세요!'); return;
 
   var pin = '';
   for (var i = 0; i < 4; i++) pin += (document.getElementById('rpin' + i).value || '');
-  if (pin.length < 4) return alert('4자리 PIN을 모두 입력해 주세요!');
+  if (pin.length < 4) showToast('4자리 PIN을 모두 입력해 주세요!'); return;
 
   var profiles = loadProfiles();
-  if (profiles[nick]) return alert('이미 사용 중인 닉네임이에요.\n다른 닉네임을 입력해 주세요!');
+  if (profiles[nick]) showToast('이미 사용 중인 닉네임이에요. 다른 닉네임을 입력해 주세요!'); return;
 
   var val = document.getElementById('examDate').value;
-  if (!val) return alert('시험일을 선택해 주세요!');
+  if (!val) showToast('시험일을 선택해 주세요!'); return;
   var exam = new Date(val);
   var today = new Date(); today.setHours(0,0,0,0);
-  if (exam <= today) return alert('시험일은 오늘 이후여야 해요!');
+  if (exam <= today) showToast('시험일은 오늘 이후여야 해요!'); return;
 
   state = { nickname: nick, pin: hashPin(pin), examDate: val, completed: [], streak: 0, bestStreak: 0, lastStudyDate: null, wrongNotes: [], mockHistory: [], studyLog: [], bookmarks: [], celebratedAll: false };
   save();
@@ -3000,31 +3010,29 @@ function getScheduleDayStatus(day, schedule) {
   return 'ahead';                   // 아직 여유
 }
 
-function renderMain() {
-  var today = new Date(); today.setHours(0,0,0,0);
-  var exam  = new Date(state.examDate); exam.setHours(0,0,0,0);
-  var diff  = Math.ceil((exam - today) / 86400000);
-
+/* ── renderMain 헬퍼 함수들 ── */
+function _renderHeader(diff) {
   document.getElementById('ddayBadge').textContent = diff > 0 ? 'D-' + diff : 'D-DAY';
   var nb = document.getElementById('topbarNickname');
   nb.textContent = (state.nickname || '') + ' ›';
   nb.title = '프로필 전환';
-
   var hour = new Date().getHours();
   var greet = (state.nickname ? state.nickname + ', ' : '') +
     (hour < 12 ? '좋은 아침이에요!' : hour < 18 ? '오늘도 화이팅!' : '오늘 학습 잊지 마세요!');
   document.getElementById('heroGreet').textContent = greet;
+}
 
-  var done = completedDays().length;
+function _renderStats() {
+  var done  = completedDays().length;
   var total = TOTAL_LECTURES;
   document.getElementById('progressText').textContent = done + ' / ' + total + '강';
-  document.getElementById('progressFill').style.width = Math.round(done/total*100) + '%';
+  document.getElementById('progressFill').style.width = Math.round(done / total * 100) + '%';
   document.getElementById('statDone').textContent   = done;
   document.getElementById('statLeft').textContent   = total - done;
   document.getElementById('statStreak').textContent = state.streak || 0;
-  var best = state.bestStreak || 0;
+  var best      = state.bestStreak || 0;
   var streakCard = document.getElementById('statStreak').parentElement;
-  var bestEl = document.getElementById('statBest');
+  var bestEl    = document.getElementById('statBest');
   if (!bestEl && best > 0) {
     var sub = document.createElement('div');
     sub.id = 'statBest';
@@ -3034,8 +3042,9 @@ function renderMain() {
   } else if (bestEl) {
     bestEl.textContent = '최고 ' + best + '일';
   }
+}
 
-  // 학습 캘린더 — 완료 일차 1개 이상 시 노출
+function _renderCalendarSection() {
   var calSection = document.getElementById('calendarSection');
   if (completedDays().length > 0) {
     calSection.style.display = 'block';
@@ -3043,61 +3052,49 @@ function renderMain() {
   } else {
     calSection.style.display = 'none';
   }
+}
 
-  // 학습 일정 계산 및 배너 표시
-  var schedule = calcSchedule(diff, state.completed);
-  renderScheduleBanner(schedule, diff);
-
-  // 시험 직전 요약 배너 (D-7 이내 강조)
-  renderSummaryBanner(diff);
-
-  var list = document.getElementById('dayList');
-  list.innerHTML = '';
-  CURRICULUM.forEach(function(cur) {
-    list.appendChild(makeDayCard(cur, schedule));
-  });
-
-  // 복습 섹션 - 완료한 일차가 1개 이상이고 퀴즈 문제가 있을 때 표시
+function _renderReviewSection() {
   var reviewableDays = completedDays().filter(function(d){ return !!QUIZ[d]; }).sort(function(a,b){ return a-b; });
-  var totalReviewQ = reviewableDays.reduce(function(acc, d){ return acc + QUIZ[d].length; }, 0);
-  var reviewSection = document.getElementById('reviewSection');
+  var totalReviewQ   = reviewableDays.reduce(function(acc,d){ return acc + QUIZ[d].length; }, 0);
+  var reviewSection      = document.getElementById('reviewSection');
   var reviewSectionTitle = document.getElementById('reviewSectionTitle');
-  var reviewDesc = document.getElementById('reviewDesc');
-
+  var reviewDesc         = document.getElementById('reviewDesc');
   if (reviewableDays.length > 0) {
-    reviewSection.style.display = 'block';
+    reviewSection.style.display      = 'block';
     reviewSectionTitle.style.display = 'block';
     var dayLabels = reviewableDays.map(function(d){ return d + '강'; }).join(' · ');
     reviewDesc.textContent = dayLabels + ' · 총 ' + totalReviewQ + '문제';
     var shortDesc = document.getElementById('reviewDescShort');
     if (shortDesc) shortDesc.textContent = '출제 강의 기준 : ' + dayLabels;
   } else {
-    reviewSection.style.display = 'none';
+    reviewSection.style.display      = 'none';
     reviewSectionTitle.style.display = 'none';
   }
+}
 
-  // 모의고사 섹션 — 11강 모두 완료 시 노출
-  var allDone = completedDays().length >= TOTAL_LECTURES;
-  var mockSection = document.getElementById('mockSection');
+function _renderMockSection() {
+  var allDone        = completedDays().length >= TOTAL_LECTURES;
+  var mockSection    = document.getElementById('mockSection');
   var mockSectionTitle = document.getElementById('mockSectionTitle');
   var mockLockNotice = document.getElementById('mockLockNotice');
   if (allDone) {
-    mockSection.style.display = 'block';
+    mockSection.style.display      = 'block';
     mockSectionTitle.style.display = 'block';
     if (mockLockNotice) mockLockNotice.style.display = 'none';
     renderMockHistoryMini();
   } else {
-    mockSection.style.display = 'none';
+    mockSection.style.display      = 'none';
     mockSectionTitle.style.display = 'none';
-    // 5강 이상 완료 시 "곧 해금" 안내 표시
     if (mockLockNotice) {
       var left = TOTAL_LECTURES - completedDays().length;
       mockLockNotice.style.display = 'block';
-      mockLockNotice.textContent = '🔒 모의고사는 전 강의 완료 후 활성화돼요 (남은 강의 ' + left + '개)';
+      mockLockNotice.textContent   = '🔒 모의고사는 전 강의 완료 후 활성화돼요 (남은 강의 ' + left + '개)';
     }
   }
+}
 
-  // 오답 노트 섹션
+function _renderWrongBookmarkSection() {
   var notes = state.wrongNotes || [];
   var wrongSection      = document.getElementById('wrongNoteSection');
   var wrongSectionTitle = document.getElementById('wrongNoteSectionTitle');
@@ -3110,9 +3107,7 @@ function renderMain() {
     wrongSection.style.display      = 'none';
     wrongSectionTitle.style.display = 'none';
   }
-
-  // 북마크 섹션
-  var bmarks = state.bookmarks || [];
+  var bmarks         = state.bookmarks || [];
   var bmSection      = document.getElementById('bookmarkSection');
   var bmSectionTitle = document.getElementById('bookmarkSectionTitle');
   var bmDesc         = document.getElementById('bookmarkDesc');
@@ -3124,6 +3119,28 @@ function renderMain() {
     bmSection.style.display      = 'none';
     bmSectionTitle.style.display = 'none';
   }
+}
+
+function renderMain() {
+  var today = new Date(); today.setHours(0,0,0,0);
+  var exam  = new Date(state.examDate); exam.setHours(0,0,0,0);
+  var diff  = Math.ceil((exam - today) / 86400000);
+
+  _renderHeader(diff);
+  _renderStats();
+  _renderCalendarSection();
+
+  var schedule = calcSchedule(diff, state.completed);
+  renderScheduleBanner(schedule, diff);
+  renderSummaryBanner(diff);
+
+  var list = document.getElementById('dayList');
+  list.innerHTML = '';
+  CURRICULUM.forEach(function(cur) { list.appendChild(makeDayCard(cur, schedule)); });
+
+  _renderReviewSection();
+  _renderMockSection();
+  _renderWrongBookmarkSection();
 }
 
 function makeDayCard(cur, schedule) {
@@ -3333,10 +3350,52 @@ function renderReview() {
   });
 }
 
-function makeReviewCard(q, i, day, total) {
-  var card = document.createElement('div');
-  card.className = 'quiz-card';
+/* ── 퀴즈 카드 공통 베이스 ── */
+function _makeBookmarkBtn(mode, keyDay, q, idx) {
+  var bmKey = makeWrongKey(mode, keyDay, q.q);
+  var isBm  = isBookmarked(bmKey);
+  var btn   = el('div', '', {
+    id:       'bmbtn_' + (mode === 'quiz' ? 'q' : 'r') + '_' + idx,
+    cssText:  '',
+    textContent: isBm ? '★' : '☆',
+    title:    isBm ? '북마크 해제' : '북마크',
+  });
+  btn.style.cssText = 'font-size:18px;cursor:pointer;flex-shrink:0;line-height:1;color:' + (isBm ? '#f0a500' : 'var(--text3)') + ';';
+  (function(cQ, cDay, cId) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleBookmark(mode, cDay, cQ, cId);
+    });
+  })(q, keyDay, btn.id);
+  return btn;
+}
 
+function makeQuizCard(q, i, total) {
+  var card = el('div', 'quiz-card');
+  var head = el('div', 'quiz-card-head');
+  var num  = el('div', 'quiz-num', {textContent: i + 1});
+  var qt   = el('div', 'quiz-q',   {textContent: q.q});
+  var bmBtn = _makeBookmarkBtn('quiz', currentDay, q, i);
+  head.appendChild(num); head.appendChild(qt); head.appendChild(bmBtn);
+  card.appendChild(head);
+
+  var opts = el('div', 'quiz-opts');
+  q.opts.forEach(function(o, oi) {
+    var btn = el('div', 'quiz-opt');
+    var ltr = el('div', 'opt-ltr', {textContent: LTRS[oi]});
+    var sp  = el('span', '', {textContent: o});
+    btn.appendChild(ltr); btn.appendChild(sp);
+    btn.addEventListener('click', function() { chooseOpt(i, oi, opts, q, total); });
+    opts.appendChild(btn);
+  });
+  card.appendChild(opts);
+
+  var fb = el('div', 'quiz-fb', {id: 'qfb' + i});
+  card.appendChild(fb);
+  return card;
+}
+
+function makeReviewCard(q, i, day, total) {
   // 보기 셔플 - 정답 인덱스 추적
   var indices = [0, 1, 2, 3];
   for (var s = indices.length - 1; s > 0; s--) {
@@ -3344,54 +3403,30 @@ function makeReviewCard(q, i, day, total) {
     var t = indices[s]; indices[s] = indices[r]; indices[r] = t;
   }
   var shuffledOpts = indices.map(function(idx){ return q.opts[idx]; });
-  var newAns = indices.indexOf(q.ans); // 셔플 후 정답의 새 위치
+  var newAns = indices.indexOf(q.ans);
 
-  // 일차 태그
-  var head = document.createElement('div');
-  head.className = 'quiz-card-head';
+  var card = el('div', 'quiz-card');
+  var head = el('div', 'quiz-card-head');
   head.style.flexDirection = 'column';
   head.style.gap = '8px';
 
-  var topRow = document.createElement('div');
+  var topRow = el('div', '', {cssText: ''});
   topRow.style.cssText = 'display:flex; align-items:flex-start; gap:12px;';
-  var num = document.createElement('div');
-  num.className = 'quiz-num'; num.textContent = i + 1;
-  var qt = document.createElement('div');
-  qt.className = 'quiz-q'; qt.textContent = q.q;
-
-  // 북마크 버튼
-  var bmKey = makeWrongKey('review', day, q.q);
-  var isBm  = isBookmarked(bmKey);
-  var bmBtn = document.createElement('div');
-  bmBtn.id = 'bmbtn_r_' + i;
-  bmBtn.style.cssText = 'font-size:18px;cursor:pointer;flex-shrink:0;line-height:1;color:' + (isBm ? '#f0a500' : 'var(--text3)') + ';';
-  bmBtn.textContent = isBm ? '★' : '☆';
-  bmBtn.title = isBm ? '북마크 해제' : '북마크';
-  (function(capturedQ, capturedDay, capturedId) {
-    bmBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      toggleBookmark('review', capturedDay, capturedQ, capturedId);
-    });
-  })(q, day, 'bmbtn_r_' + i);
-
+  var num   = el('div', 'quiz-num', {textContent: i + 1});
+  var qt    = el('div', 'quiz-q',   {textContent: q.q});
+  var bmBtn = _makeBookmarkBtn('review', day, q, i);
   topRow.appendChild(num); topRow.appendChild(qt); topRow.appendChild(bmBtn);
 
-  var dayTag = document.createElement('div');
+  var dayTag = el('div', '', {textContent: day + '강'});
   dayTag.style.cssText = 'font-size:10px; font-weight:700; color:var(--accent); background:rgba(88,166,255,0.1); border:1px solid rgba(88,166,255,0.25); border-radius:20px; padding:3px 10px; display:inline-block; margin-left:2px;';
-  dayTag.textContent = day + '강';
-
-  head.appendChild(topRow);
-  head.appendChild(dayTag);
+  head.appendChild(topRow); head.appendChild(dayTag);
   card.appendChild(head);
 
-  var opts = document.createElement('div');
-  opts.className = 'quiz-opts';
+  var opts = el('div', 'quiz-opts');
   shuffledOpts.forEach(function(o, oi) {
-    var btn = document.createElement('div');
-    btn.className = 'quiz-opt';
-    var ltr = document.createElement('div');
-    ltr.className = 'opt-ltr'; ltr.textContent = LTRS[oi];
-    var sp = document.createElement('span'); sp.textContent = o;
+    var btn = el('div', 'quiz-opt');
+    var ltr = el('div', 'opt-ltr', {textContent: LTRS[oi]});
+    var sp  = el('span', '', {textContent: o});
     btn.appendChild(ltr); btn.appendChild(sp);
     btn.addEventListener('click', (function(capturedOi) {
       return function() {
@@ -3403,8 +3438,7 @@ function makeReviewCard(q, i, day, total) {
   });
   card.appendChild(opts);
 
-  var fb = document.createElement('div');
-  fb.className = 'quiz-fb'; fb.id = 'rfb' + i;
+  var fb = el('div', 'quiz-fb', {id: 'rfb' + i});
   card.appendChild(fb);
   return card;
 }
@@ -3693,15 +3727,11 @@ function renderMockHistoryMini() {
   if (moreBtn) moreBtn.style.display = history.length > 1 ? 'block' : 'none';
 }
 
-function showMockHistory() {
-  var history = state.mockHistory || [];
-  if (history.length === 0) { showToast('아직 모의고사 기록이 없어요!'); return; }
+function _renderHistorySummary(history) {
   var best   = Math.max.apply(null, history.map(function(h){ return h.pct; }));
   var passes = history.filter(function(h){ return h.passed; }).length;
   var avgPct = Math.round(history.reduce(function(s,h){ return s+h.pct; },0) / history.length);
-
-  var summaryEl = document.getElementById('mockHistorySummary');
-  summaryEl.innerHTML = [
+  document.getElementById('mockHistorySummary').innerHTML = [
     {label:'응시 횟수', val:history.length+'회'},
     {label:'최고 점수', val:best+'%'},
     {label:'평균 점수', val:avgPct+'%'},
@@ -3711,13 +3741,14 @@ function showMockHistory() {
       '<div style="font-size:18px;font-weight:800;color:var(--accent);">' + c.val + '</div>' +
       '<div style="font-size:10px;color:var(--text2);margin-top:2px;">' + c.label + '</div></div>';
   }).join('');
+}
 
-  var chartEl = document.getElementById('mockHistoryChart');
-  var W=320,H=120,PAD=24;
+function _renderHistoryChart(history) {
+  var W=320, H=120, PAD=24;
   var barW = Math.min(32, Math.floor((W-PAD*2)/history.length - 4));
   var gap  = Math.floor((W-PAD*2-barW*history.length)/Math.max(history.length-1,1));
-  var svg = '<svg width="100%" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="display:block;">';
   var lineY = PAD+(H-PAD*2)*(1-65/100);
+  var svg = '<svg width="100%" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="display:block;">';
   svg += '<line x1="'+PAD+'" y1="'+lineY+'" x2="'+(W-PAD)+'" y2="'+lineY+'" stroke="#f0a500" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>';
   svg += '<text x="'+(W-PAD+2)+'" y="'+(lineY+4)+'" font-size="9" fill="#f0a500" opacity="0.9">65%</text>';
   history.forEach(function(h,i){
@@ -3730,45 +3761,55 @@ function showMockHistory() {
     svg+='<text x="'+(x+barW/2)+'" y="'+(H-4)+'" text-anchor="middle" font-size="8" fill="#888">'+(i+1)+'회</text>';
   });
   svg += '</svg>';
-  chartEl.innerHTML = '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px 8px 4px;">' +
+  document.getElementById('mockHistoryChart').innerHTML =
+    '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:12px 8px 4px;">' +
     '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;padding-left:4px;">점수 추이</div>' + svg + '</div>';
+}
 
-  var listEl = document.getElementById('mockHistoryList');
-  var listHtml = '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">전체 기록</div>';
-  var reversed = history.slice().reverse();
-  reversed.forEach(function(h,i){
-    var roundNum = history.length - i;
-    var passColor = h.passed?'#3fb950':'#f85149';
-    var passBg    = h.passed?'rgba(63,185,80,0.08)':'rgba(248,81,73,0.08)';
-    listHtml += '<div style="background:'+passBg+';border:0.5px solid '+passColor+'44;border-radius:12px;padding:12px 14px;margin-bottom:8px;">';
-    listHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
-    listHtml += '<div style="font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;">';
-    var tLabel = h.type === 'random' ? '랜덤' : (h.type || 'A') + '형';
-    var tColor = ({A:'#58a6ff',B:'#bc6cff',C:'#ff6c6c',D:'#6cff96',random:'#3fb950'})[h.type] || '#58a6ff';
-    listHtml += '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;background:'+tColor+'22;color:'+tColor+';border:1px solid '+tColor+'44;">'+tLabel+'</span>';
-    listHtml += roundNum+'회차 <span style="font-size:10px;color:var(--text2);font-weight:400;">'+h.date+'</span></div>';
-    listHtml += '<div style="display:flex;align-items:center;gap:6px;">';
-    listHtml += '<span style="font-size:14px;font-weight:800;color:'+passColor+';">'+h.score+'/'+h.total+' ('+h.pct+'%)</span>';
-    listHtml += '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+passColor+'22;color:'+passColor+';">'+(h.passed?'합격':'불합격')+'</span>';
-    listHtml += '</div></div>';
+function _renderHistoryList(history) {
+  var typeColors = {A:'#58a6ff',B:'#bc6cff',C:'#ff6c6c',D:'#6cff96',random:'#3fb950'};
+  var chNames    = {1:'Ch.1',2:'Ch.2',3:'Ch.3',4:'Ch.4',5:'Ch.5',6:'Ch.6'};
+  var html = '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">전체 기록</div>';
+  history.slice().reverse().forEach(function(h,i){
+    var roundNum  = history.length - i;
+    var passColor = h.passed ? '#3fb950' : '#f85149';
+    var passBg    = h.passed ? 'rgba(63,185,80,0.08)' : 'rgba(248,81,73,0.08)';
+    var tLabel    = h.type === 'random' ? '랜덤' : (h.type || 'A') + '형';
+    var tColor    = typeColors[h.type] || '#58a6ff';
+    html += '<div style="background:'+passBg+';border:0.5px solid '+passColor+'44;border-radius:12px;padding:12px 14px;margin-bottom:8px;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
+    html += '<div style="font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;">';
+    html += '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;background:'+tColor+'22;color:'+tColor+';border:1px solid '+tColor+'44;">'+tLabel+'</span>';
+    html += roundNum+'회차 <span style="font-size:10px;color:var(--text2);font-weight:400;">'+h.date+'</span></div>';
+    html += '<div style="display:flex;align-items:center;gap:6px;">';
+    html += '<span style="font-size:14px;font-weight:800;color:'+passColor+';">'+h.score+'/'+h.total+' ('+h.pct+'%)</span>';
+    html += '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+passColor+'22;color:'+passColor+';">'+(h.passed?'합격':'불합격')+'</span>';
+    html += '</div></div>';
     if (h.chStats) {
-      var chNames={1:'Ch.1',2:'Ch.2',3:'Ch.3',4:'Ch.4',5:'Ch.5',6:'Ch.6'};
-      listHtml += '<div style="display:flex;gap:4px;flex-wrap:wrap;">';
-      for (var ch=1;ch<=6;ch++) {
+      html += '<div style="display:flex;gap:4px;flex-wrap:wrap;">';
+      for (var ch=1; ch<=6; ch++) {
         var st=h.chStats[ch];
         if (!st||st.total===0) continue;
         var cp=Math.round(st.correct/st.total*100);
         var bc=cp>=70?'#3fb950':cp>=50?'#d29922':'#f85149';
-        listHtml += '<div style="flex:1;min-width:40px;">';
-        listHtml += '<div style="font-size:9px;color:var(--text2);margin-bottom:2px;text-align:center;">'+chNames[ch]+'</div>';
-        listHtml += '<div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;"><div style="width:'+cp+'%;height:100%;background:'+bc+';border-radius:2px;"></div></div>';
-        listHtml += '<div style="font-size:9px;color:'+bc+';text-align:center;margin-top:1px;">'+cp+'%</div></div>';
+        html += '<div style="flex:1;min-width:40px;">';
+        html += '<div style="font-size:9px;color:var(--text2);margin-bottom:2px;text-align:center;">'+chNames[ch]+'</div>';
+        html += '<div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;"><div style="width:'+cp+'%;height:100%;background:'+bc+';border-radius:2px;"></div></div>';
+        html += '<div style="font-size:9px;color:'+bc+';text-align:center;margin-top:1px;">'+cp+'%</div></div>';
       }
-      listHtml += '</div>';
+      html += '</div>';
     }
-    listHtml += '</div>';
+    html += '</div>';
   });
-  listEl.innerHTML = listHtml;
+  document.getElementById('mockHistoryList').innerHTML = html;
+}
+
+function showMockHistory() {
+  var history = state.mockHistory || [];
+  if (history.length === 0) { showToast('아직 모의고사 기록이 없어요!'); return; }
+  _renderHistorySummary(history);
+  _renderHistoryChart(history);
+  _renderHistoryList(history);
   showScreen('mockHistoryScreen');
 }
 
@@ -4015,57 +4056,7 @@ function renderQuiz(day) {
   qs.forEach(function(q, i) { wrap.appendChild(makeQuizCard(q, i, qs.length)); });
 }
 
-function makeQuizCard(q, i, total) {
-  var card = document.createElement('div');
-  card.className = 'quiz-card';
 
-  var head = document.createElement('div');
-  head.className = 'quiz-card-head';
-  var num = document.createElement('div');
-  num.className = 'quiz-num';
-  num.textContent = i + 1;
-  var qt = document.createElement('div');
-  qt.className = 'quiz-q';
-  qt.textContent = q.q;
-
-  // 북마크 버튼
-  var bmKey = makeWrongKey('quiz', currentDay, q.q);
-  var isBm  = isBookmarked(bmKey);
-  var bmBtn = document.createElement('div');
-  bmBtn.id = 'bmbtn_q_' + i;
-  bmBtn.style.cssText = 'font-size:18px;cursor:pointer;flex-shrink:0;line-height:1;color:' + (isBm ? '#f0a500' : 'var(--text3)') + ';';
-  bmBtn.textContent = isBm ? '★' : '☆';
-  bmBtn.title = isBm ? '북마크 해제' : '북마크';
-  bmBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    toggleBookmark('quiz', currentDay, q, 'bmbtn_q_' + i);
-  });
-
-  head.appendChild(num); head.appendChild(qt); head.appendChild(bmBtn);
-  card.appendChild(head);
-
-  var opts = document.createElement('div');
-  opts.className = 'quiz-opts';
-  q.opts.forEach(function(o, oi) {
-    var btn = document.createElement('div');
-    btn.className = 'quiz-opt';
-    var ltr = document.createElement('div');
-    ltr.className = 'opt-ltr';
-    ltr.textContent = LTRS[oi];
-    var sp = document.createElement('span');
-    sp.textContent = o;
-    btn.appendChild(ltr); btn.appendChild(sp);
-    btn.addEventListener('click', function() { chooseOpt(i, oi, opts, q, total); });
-    opts.appendChild(btn);
-  });
-  card.appendChild(opts);
-
-  var fb = document.createElement('div');
-  fb.className = 'quiz-fb';
-  fb.id = 'qfb' + i;
-  card.appendChild(fb);
-  return card;
-}
 
 function chooseOpt(qi, oi, optsEl, q, total) {
   var btns = optsEl.querySelectorAll('.quiz-opt');
