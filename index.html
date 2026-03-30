@@ -3928,14 +3928,14 @@ function _renderHistoryChart(history) {
 }
 
 function _renderHistoryList(history) {
-  var typeColors = {A:'#58a6ff',B:'#bc6cff',C:'#ff6c6c',D:'#6cff96',random:'#3fb950'};
+  var typeColors = {A:'#58a6ff',B:'#bc6cff',C:'#ff6c6c',D:'#6cff96',E:'#ffc107',random:'#3fb950'};
   var chNames    = {1:'Ch.1',2:'Ch.2',3:'Ch.3',4:'Ch.4',5:'Ch.5',6:'Ch.6'};
   var html = '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">전체 기록</div>';
   history.slice().reverse().forEach(function(h,i){
     var roundNum  = history.length - i;
     var passColor = h.passed ? '#3fb950' : '#f85149';
     var passBg    = h.passed ? 'rgba(63,185,80,0.08)' : 'rgba(248,81,73,0.08)';
-    var tLabel    = h.type === 'random' ? '랜덤' : (h.type || 'A') + '형';
+    var tLabel    = h.type === 'random' ? '랜덤' : h.type === 'E' ? 'E형(혼합)' : (h.type || 'A') + '형';
     var tColor    = typeColors[h.type] || '#58a6ff';
     html += '<div style="background:'+passBg+';border:0.5px solid '+passColor+'44;border-radius:12px;padding:12px 14px;margin-bottom:8px;">';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
@@ -4361,6 +4361,8 @@ function startMockExam(type) {
   var sourcePool;
   if (mockCurrentType === 'random') {
     sourcePool = MOCK_QUIZ_A.concat(MOCK_QUIZ_B).concat(MOCK_QUIZ_C).concat(MOCK_QUIZ_D);
+  } else if (mockCurrentType === 'E') {
+    sourcePool = MOCK_QUIZ_A.concat(MOCK_QUIZ_B).concat(MOCK_QUIZ_C);
   } else if (mockCurrentType === 'B') {
     sourcePool = MOCK_QUIZ_B.slice();
   } else if (mockCurrentType === 'C') {
@@ -4373,7 +4375,7 @@ function startMockExam(type) {
 
   // 랜덤 모드는 120문제에서 40개 추출, 나머지는 전체 셔플
   var pool;
-  if (mockCurrentType === 'random') {
+  if (mockCurrentType === 'random' || mockCurrentType === 'E') {
     pool = shuffle(sourcePool).slice(0, MOCK_TOTAL_Q);
   } else {
     pool = shuffle(sourcePool);
@@ -4718,6 +4720,16 @@ if ('serviceWorker' in navigator) {
         <div style="font-size:22px;">📄</div>
         <div style="font-size:14px;font-weight:800;color:#6cff96;">D형</div>
         <div style="font-size:10px;color:var(--text2);">40문제</div>
+      </div>
+    </div>
+
+    <!-- E형 혼합형 -->
+    <div class="review-card" onclick="startMockExam('E')"
+      style="background:linear-gradient(135deg,#2a1f0a,#3a2f00);border:1px solid rgba(255,193,7,0.5);margin-top:10px;padding:14px 16px;">
+      <div class="review-icon" style="background:rgba(255,193,7,0.15);border:1px solid rgba(255,193,7,0.4);font-size:20px;">🎯</div>
+      <div class="review-info">
+        <div class="review-title" style="color:#ffc107;">E형 (혼합형)</div>
+        <div class="review-desc" style="color:rgba(255,193,7,0.8);">A+B+C 120문제 중 랜덤 40개 · 실전 시뮬레이션용</div>
       </div>
     </div>
 
